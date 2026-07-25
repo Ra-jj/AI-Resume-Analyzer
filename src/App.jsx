@@ -2,7 +2,6 @@
 import { useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
-import "./App.css";
 
 import UploadView from "./components/UploadView";
 import DashboardView from "./components/DashboardView";
