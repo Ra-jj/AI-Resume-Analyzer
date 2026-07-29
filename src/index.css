@@ -270,6 +270,13 @@ body {
   margin-bottom: 12px;
   align-items: flex-start;
   color: var(--text-muted);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.list-item span {
+  min-width: 0;
+  flex: 1;
 }
 
 .badge {
