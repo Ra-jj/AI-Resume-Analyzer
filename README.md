@@ -1,10 +1,6 @@
 # AI Resume Analyzer
 
-![Live Demo](https://img.shields.io/badge/Live_Demo-Available-success?style=for-the-badge&logo=vercel)
-![React](https://img.shields.io/badge/React-19.2-blue?style=for-the-badge&logo=react)
-![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?style=for-the-badge&logo=vite)
-
-**Live Demo**: [https://ai-resume-analyzer-rajcodes.vercel.app/](https://ai-resume-analyzer-rajcodes.vercel.app/)
+🔗 [Live Demo](https://ai-resume-analyzer-rajcodes.vercel.app/)
 
 A modern, client-side React application that allows users to upload their PDF resumes for instant, AI-powered feedback. It evaluates the resume based on content quality, formatting, and ATS compatibility without relying on a traditional backend server.
 
