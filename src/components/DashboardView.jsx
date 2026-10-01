@@ -10,12 +10,19 @@ import {
   Briefcase,
   Star,
   Info,
+  ListChecks,
+  ScanSearch,
 } from "lucide-react";
 
 import { MAX_ANALYZED_CHARACTERS } from "../lib/limits.js";
+import {
+  AI_SCORE_WEIGHT_PERCENT,
+  CHECKS_SCORE_WEIGHT_PERCENT,
+} from "../lib/report.js";
 
 const hasText = (value) => typeof value === "string" && value.length > 0;
 const hasItems = (value) => Array.isArray(value) && value.length > 0;
+const isScore = (value) => Number.isFinite(value);
 
 // Cards are laid out in pairs; when one of a pair has nothing to show it is
 // hidden and its partner takes the full row instead of leaving a gap.
@@ -36,6 +43,14 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
   const showInsights = hasItems(results.resumeInsights);
   const showKeywords = hasItems(results.recommendedKeywords);
   const showInsightsCard = showInsights || showKeywords;
+  const showScoreBreakdown =
+    isScore(results.aiScore) && isScore(results.checksScore);
+  const jobMatch = results.jobMatch ?? null;
+  const showJobMatch = jobMatch !== null && isScore(jobMatch.matchScore);
+  const showResumeChecks = hasItems(results.resumeChecks);
+  const passedCheckCount = showResumeChecks
+    ? results.resumeChecks.filter((check) => check.passed).length
+    : 0;
 
   // The modifier class sets the colour shared by the rating badge and the
   // score bar.
@@ -79,6 +94,25 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
               <span className="score-value">{results.overallScore}</span>
             </div>
             <h3 className="score-label">Overall Resume Score</h3>
+            {showScoreBreakdown && (
+              <div className="score-breakdown">
+                <p className="score-breakdown-text">
+                  <span className="score-breakdown-part">
+                    AI review {results.aiScore}
+                  </span>
+                  <span
+                    className="score-breakdown-separator"
+                    aria-hidden="true"
+                  >
+                    ·
+                  </span>
+                  <span className="visually-hidden">, </span>
+                  <span className="score-breakdown-part">
+                    Resume checks {results.checksScore}
+                  </span>
+                </p>
+              </div>
+            )}
 
             <div className="score-badge">
               <Star fill="currentColor" size={16} /> {scoreRating.text}
@@ -92,10 +126,79 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
             </div>
 
             <p className="score-note">
-              Score based on content quality, formatting, and keyword usage
+              Combines the AI review ({AI_SCORE_WEIGHT_PERCENT}%) with automated
+              resume checks ({CHECKS_SCORE_WEIGHT_PERCENT}%).
             </p>
           </div>
         </div>
+
+        {/* Job Match: only when a job description was sent and the AI
+            returned a usable comparison. */}
+        {showJobMatch && (
+          <div className="col-span-12 card">
+            <h3 className="card-title">
+              <ScanSearch size={20} /> Job Match
+            </h3>
+            <div className="metric-row">
+              <span className="metric-name">Match with this role</span>
+              <span className="metric-score">{jobMatch.matchScore}%</span>
+            </div>
+            <div className="metric-bar-bg">
+              <div
+                className="metric-bar-fill"
+                style={{ "--value": `${jobMatch.matchScore}%` }}
+              ></div>
+            </div>
+            {hasText(jobMatch.summary) && (
+              <p className="summary-text job-match-summary">
+                {jobMatch.summary}
+              </p>
+            )}
+            {(hasItems(jobMatch.matchedKeywords) ||
+              hasItems(jobMatch.missingKeywords)) && (
+              <div className="keyword-groups">
+                {hasItems(jobMatch.matchedKeywords) && (
+                  <div>
+                    <h4 className="keyword-group-title">
+                      <CheckCircle
+                        size={16}
+                        color="var(--success)"
+                        aria-hidden="true"
+                      />
+                      Matched keywords
+                    </h4>
+                    <div>
+                      {jobMatch.matchedKeywords.map((keyword, idx) => (
+                        <span className="badge badge--success" key={idx}>
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {hasItems(jobMatch.missingKeywords) && (
+                  <div>
+                    <h4 className="keyword-group-title">
+                      <AlertTriangle
+                        size={16}
+                        color="var(--warning)"
+                        aria-hidden="true"
+                      />
+                      Missing keywords
+                    </h4>
+                    <div>
+                      {jobMatch.missingKeywords.map((keyword, idx) => (
+                        <span className="badge badge--warning" key={idx}>
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Executive Summary */}
         {showSummary && (
@@ -145,6 +248,48 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Resume Checks: calculated in code from the resume text */}
+        {showResumeChecks && (
+          <div className="col-span-12 card">
+            <h3 className="card-title">
+              <ListChecks size={20} /> Resume Checks
+            </h3>
+            <p className="resume-checks-summary">
+              {passedCheckCount} of {results.resumeChecks.length} checks passed
+            </p>
+            <ul className="resume-check-list">
+              {results.resumeChecks.map((check) => (
+                <li className="list-item resume-check" key={check.id}>
+                  {check.passed ? (
+                    <CheckCircle
+                      size={18}
+                      color="var(--success)"
+                      className="list-item-icon"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <AlertTriangle
+                      size={18}
+                      color="var(--warning)"
+                      className="list-item-icon"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <div className="resume-check-text">
+                    <span className="resume-check-label">
+                      <span className="visually-hidden">
+                        {check.passed ? "Passed: " : "Needs attention: "}
+                      </span>
+                      {check.label}
+                    </span>
+                    <span className="resume-check-detail">{check.detail}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

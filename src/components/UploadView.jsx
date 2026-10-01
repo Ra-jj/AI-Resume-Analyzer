@@ -3,23 +3,36 @@ import { AlertTriangle } from "lucide-react";
 
 import { isFileDrag } from "../lib/files.js";
 import { MAX_FILE_SIZE_MB, MAX_PAGES } from "../lib/limits.js";
+import JobDescriptionInput from "./JobDescriptionInput.jsx";
 
 // onUploadIntent runs when the user looks about to choose a file (a file is
 // dragged in, or the pointer or keyboard focus reaches the button), so the
 // PDF reader can start loading early. It must be safe to call repeatedly.
-function UploadView({ loading, error, onFileSelected, onUploadIntent }) {
+function UploadView({
+  loading,
+  error,
+  onFileSelected,
+  onUploadIntent,
+  jobDescription,
+  onJobDescriptionChange,
+  onJobDescriptionClear,
+}) {
   const [isDragActive, setIsDragActive] = useState(false);
   // dragenter/dragleave also fire when the pointer crosses the dropzone's own
   // children. Counting enters minus leaves keeps the highlight from
   // flickering off while a file is dragged over the icon or text.
   const dragDepthRef = useRef(0);
   const errorRef = useRef(null);
+  // A too-short job description is shown on the field itself; every other
+  // error goes in the card under the dropzone.
+  const jobDescriptionError = error?.code === "JD_TOO_SHORT" ? error : null;
+  const generalError = jobDescriptionError ? null : error;
 
   useEffect(() => {
     // On phones the error card renders below the fold, under the dropzone.
     // Scroll just far enough to show it so a rejected file isn't silent.
-    if (error) errorRef.current?.scrollIntoView({ block: "nearest" });
-  }, [error]);
+    if (generalError) errorRef.current?.scrollIntoView({ block: "nearest" });
+  }, [generalError]);
 
   const handleDragEnter = (event) => {
     if (!isFileDrag(event)) return;
@@ -68,6 +81,17 @@ function UploadView({ loading, error, onFileSelected, onUploadIntent }) {
       <p className="upload-subtitle">
         Upload your PDF resume and get instant AI feedback
       </p>
+
+      {/* Hidden while analyzing: an edit then wouldn't reach the request
+          that is already running. */}
+      {!loading && (
+        <JobDescriptionInput
+          value={jobDescription}
+          error={jobDescriptionError}
+          onChange={onJobDescriptionChange}
+          onClear={onJobDescriptionClear}
+        />
+      )}
 
       {/* Distinct keys stop React from reusing the spinner's nodes as the
           dropzone, which would animate the spinner's cyan border into it. */}
@@ -136,14 +160,14 @@ function UploadView({ loading, error, onFileSelected, onUploadIntent }) {
         </div>
       )}
 
-      {error && (
+      {generalError && (
         <div ref={errorRef} className="card mt-8 upload-error" role="alert">
           <AlertTriangle
             size={18}
             className="upload-error-icon"
             aria-hidden="true"
           />
-          <p>{error.message}</p>
+          <p>{generalError.message}</p>
         </div>
       )}
     </div>

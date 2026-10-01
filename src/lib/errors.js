@@ -23,8 +23,18 @@ const ERROR_MESSAGES = {
   AI_TIMEOUT: `The AI didn't respond within ${Math.round(AI_TIMEOUT_MS / 60000)} minutes. If a Puter sign-in window opened, finish signing in, then try again.`,
   AI_FAILED:
     "The AI request didn't complete. If a Puter sign-in window opened, finish signing in and try again.",
+  AI_USAGE_LIMIT:
+    "Your Puter AI usage limit has been reached. Puter may offer an upgrade; otherwise try again later.",
+  AI_SIGN_IN_CLOSED:
+    "The Puter sign-in window was closed before sign-in finished. Choose your file again and complete the sign-in.",
+  AI_POPUP_BLOCKED:
+    "Your browser blocked the Puter sign-in window. Allow pop-ups for this site, then choose your file again.",
+  AI_AUTH:
+    "Puter sign-in didn't complete. Choose your file again and finish signing in.",
   AI_BAD_RESPONSE:
     "The AI returned a response we couldn't read. Please try again.",
+  JD_TOO_SHORT:
+    "The job description is too short to compare against. Paste the full posting or clear the box.",
   UNEXPECTED:
     "Something went wrong while analyzing this resume. Reload the page and try again.",
 };

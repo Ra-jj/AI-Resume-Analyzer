@@ -130,9 +130,28 @@ function toChecklist(value) {
 }
 
 /**
+ * The optional comparison against a job description. Without a usable
+ * matchScore there is nothing to show, so the whole match is dropped (null)
+ * rather than failing the report it came with.
+ */
+function toJobMatch(value) {
+  if (!isPlainObject(value)) return null;
+  const matchScore = parseScore(value.matchScore);
+  if (matchScore === null) return null;
+  return {
+    matchScore,
+    summary: toText(value.summary),
+    matchedKeywords: toStringList(value.matchedKeywords),
+    missingKeywords: toStringList(value.missingKeywords),
+  };
+}
+
+/**
  * Validates the parsed AI reply and returns an object with a guaranteed shape:
  * every field the dashboard reads is present and of the right type, scores
  * are integers clamped to 0–100, and lists hold at most 10 clean items.
+ * `jobMatch` is the normalized job comparison, or null when the reply has
+ * none or it is unusable.
  * Throws if `raw` isn't a plain object or has no usable overallScore — a
  * report without a score is a bad response, not something to show as 0.
  */
@@ -160,5 +179,6 @@ export function normalizeAnalysis(raw) {
     atsCompatibilityChecklist: toChecklist(raw.atsCompatibilityChecklist),
     recommendedKeywords: toStringList(raw.recommendedKeywords),
     recommendedRoles: toStringList(raw.recommendedRoles),
+    jobMatch: toJobMatch(raw.jobMatch),
   };
 }

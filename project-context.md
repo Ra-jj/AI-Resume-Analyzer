@@ -27,8 +27,8 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - `src/App.jsx` — thin: picks the upload or report screen
 - `src/hooks/useResumeAnalysis.js` — all upload-flow state and actions
 - `src/services/` — side effects: `pdf.js` (lazy pdf.js extraction), `analyze.js` (the only file that touches `puter`)
-- `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, file checks, limits
-- `src/components/` — UploadView, DashboardView, ErrorBoundary
+- `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, AI-failure mapping, file checks, limits, resume checks, score blending
+- `src/components/` — UploadView, JobDescriptionInput, DashboardView, ErrorBoundary
 - `src/index.css` — all styles and design tokens; no inline styles except data-driven CSS custom properties (`--score`, `--value`)
 
 ## Conventions
@@ -51,3 +51,6 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - `puter` is a global from a script tag; ESLint needs `/* global puter */` (only in services/analyze.js).
 - pdf.js is dynamically imported. Chrome caches a failed dynamic import for the page's lifetime, so a retry needs a reload. Never add a global `vite:preloadError` → reload handler.
 - The first `puter.ai.chat` call may open a Puter sign-in popup for the visitor.
+- The AI model is pinned in one place: `AI_MODEL` in src/services/analyze.js. Call form is `puter.ai.chat(messages, false, { model, normalize: true })`. Puter has no JSON mode, and per-model support for `temperature`/`max_tokens` is unverified, so don't add them.
+- Puter rejections can be Errors, plain objects or raw XMLHttpRequests; always go through `describeAiFailure` (lib/aiErrors.js), never read `.message` directly.
+- Score = 70% AI + 30% code checks (lib/report.js). Resume checks run on the FULL extracted text, before the 15,000-char AI cap.

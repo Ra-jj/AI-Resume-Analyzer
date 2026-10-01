@@ -12,6 +12,11 @@ export const MIN_TEXT_CHARACTERS = 50;
 // Upper bound on resume text sent to the AI, to keep the prompt a sane size.
 export const MAX_ANALYZED_CHARACTERS = 15000;
 
+// The optional job description: capped so the prompt stays a sane size, and
+// below the minimum there is too little to compare a resume against.
+export const MAX_JOB_DESCRIPTION_CHARACTERS = 5000;
+export const MIN_JOB_DESCRIPTION_CHARACTERS = 100;
+
 export const AI_TIMEOUT_MS = 120000;
 
 // Upper bound on loading pdf.js, and separately on parsing a file with it, so
@@ -41,6 +46,24 @@ export function truncateForAnalysis(text) {
     return { text, truncated: false };
   }
   return { text: text.slice(0, MAX_ANALYZED_CHARACTERS), truncated: true };
+}
+
+/**
+ * Prepares the job description the user typed. Blank text means no
+ * comparison was asked for (`text` is null). Otherwise returns the capped,
+ * whitespace-collapsed text and whether it is too short to compare against.
+ */
+export function prepareJobDescription(rawText) {
+  const text =
+    typeof rawText === "string"
+      ? collapseWhitespace(rawText.slice(0, MAX_JOB_DESCRIPTION_CHARACTERS))
+      : "";
+  if (!text) return { text: null, isTooShort: false };
+  return {
+    text,
+    isTooShort:
+      countNonWhitespaceCharacters(text) < MIN_JOB_DESCRIPTION_CHARACTERS,
+  };
 }
 
 /**

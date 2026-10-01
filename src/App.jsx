@@ -11,8 +11,11 @@ function App() {
     results,
     wasTextTruncated,
     reportId,
+    jobDescription,
     processFile,
     resetToUpload,
+    setJobDescription,
+    clearJobDescription,
     preloadPdfReader,
   } = useResumeAnalysis();
 
@@ -45,6 +48,9 @@ function App() {
       error={error}
       onFileSelected={processFile}
       onUploadIntent={preloadPdfReader}
+      jobDescription={jobDescription}
+      onJobDescriptionChange={setJobDescription}
+      onJobDescriptionClear={clearJobDescription}
     />
   );
 }

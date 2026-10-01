@@ -15,6 +15,14 @@
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
+
+  /* Status colours at 10% (tint) and 25% (border) */
+  --success-tint: rgba(16, 185, 129, 0.1);
+  --success-border: rgba(16, 185, 129, 0.25);
+  --warning-tint: rgba(245, 158, 11, 0.1);
+  --warning-border: rgba(245, 158, 11, 0.25);
+  --danger-tint: rgba(239, 68, 68, 0.1);
+  --danger-border: rgba(239, 68, 68, 0.25);
 }
 
 * {
@@ -175,6 +183,162 @@ body {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* Optional job description, between the subtitle and the dropzone */
+.jd-section {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 1.5rem;
+}
+
+.jd-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  background: none;
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.jd-add-btn:hover {
+  background: var(--border-glow);
+}
+
+.jd-add-btn:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 3px;
+}
+
+.jd-panel {
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  background: var(--surface-color);
+  text-align: left;
+}
+
+.jd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 0.75rem;
+}
+
+.jd-label {
+  font-weight: 600;
+}
+
+/* The negative margin lines the text up with the textarea's right edge
+   while keeping a comfortable click target. */
+.jd-clear-btn {
+  flex-shrink: 0;
+  margin-right: -10px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.jd-clear-btn:hover {
+  color: var(--text-main);
+}
+
+.jd-clear-btn:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+.jd-textarea {
+  display: block;
+  width: 100%;
+  min-height: 8rem;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: var(--bg-color);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.jd-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* One ring: the outline sits over the 1px border instead of beside it. */
+.jd-textarea:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: -1px;
+}
+
+.jd-textarea[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.jd-textarea[aria-invalid="true"]:focus-visible {
+  outline-color: var(--danger);
+}
+
+/* "Too short" message, directly under the field it is about. */
+.jd-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 0.5rem;
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+.jd-error span {
+  min-width: 0;
+}
+
+/* Centre the 16px icon on the first line of text (line-height 1.6). */
+.jd-error-icon {
+  flex-shrink: 0;
+  margin-top: calc((1.6em - 16px) / 2);
+}
+
+.jd-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.jd-footer p {
+  min-width: 0;
+}
+
+/* Keeps "1,234 / 5,000" on one line; the helper text next to it wraps. */
+.jd-count {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.jd-count--full {
+  color: var(--warning);
 }
 
 /* Compound selector: .card is declared later in this file and would
@@ -346,26 +510,71 @@ body {
    and the score bar; the tint and border are that colour at 10% and 25%. */
 .score-panel--excellent {
   --rating-color: var(--success);
-  --rating-tint: rgba(16, 185, 129, 0.1);
-  --rating-border: rgba(16, 185, 129, 0.25);
+  --rating-tint: var(--success-tint);
+  --rating-border: var(--success-border);
 }
 
 .score-panel--good {
   --rating-color: var(--warning);
-  --rating-tint: rgba(245, 158, 11, 0.1);
-  --rating-border: rgba(245, 158, 11, 0.25);
+  --rating-tint: var(--warning-tint);
+  --rating-border: var(--warning-border);
 }
 
 .score-panel--needs-improvement {
   --rating-color: var(--danger);
-  --rating-tint: rgba(239, 68, 68, 0.1);
-  --rating-border: rgba(239, 68, 68, 0.25);
+  --rating-tint: var(--danger-tint);
+  --rating-border: var(--danger-border);
 }
 
 .score-label {
   margin-top: 1rem;
   font-size: 1.25rem;
   color: var(--text-muted);
+  text-align: center;
+}
+
+/* "AI review 82 · Resume checks 67" on one line when it fits. Narrower, the
+   two parts stack and the dot is hidden, so it can never dangle at the end
+   of a line. The container width is measured in em of this same text, so
+   the switch holds at any font size; browsers without container queries
+   get the stacked layout. */
+.score-breakdown {
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  container-type: inline-size;
+}
+
+.score-breakdown-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.score-breakdown-part {
+  white-space: nowrap;
+}
+
+.score-breakdown-separator {
+  display: none;
+  margin: 0 0.5rem;
+}
+
+/* The longest line, "AI review 100 · Resume checks 100", is about 17.1em;
+   18em leaves room for font differences. flex-wrap only matters if a
+   fallback font is wider still: it wraps rather than overflowing. */
+@container (min-width: 18em) {
+  .score-breakdown-text {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .score-breakdown-separator {
+    display: inline;
+  }
 }
 
 .score-badge {
@@ -405,6 +614,7 @@ body {
   margin-top: 12px;
   font-size: 0.85rem;
   color: var(--text-muted);
+  text-align: center;
 }
 
 .summary-text {
@@ -531,6 +741,95 @@ body {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   margin: 4px;
+}
+
+.badge--success {
+  background: var(--success-tint);
+  border-color: var(--success-border);
+  color: var(--success);
+}
+
+.badge--warning {
+  background: var(--warning-tint);
+  border-color: var(--warning-border);
+  color: var(--warning);
+}
+
+/* Job Match */
+.job-match-summary {
+  margin-top: 1.25rem;
+}
+
+/* Matched and missing keywords side by side; one group alone, or a narrow
+   screen, gets the full width. Same column gap as the Resume Checks list
+   and the dashboard grid. */
+.keyword-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.keyword-groups > :only-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+  .keyword-groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.keyword-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.keyword-group-title svg {
+  flex-shrink: 0;
+}
+
+/* Resume Checks: two columns of checks on wide screens, one on phones. */
+.resume-checks-summary {
+  margin-bottom: 1.25rem;
+  color: var(--text-muted);
+}
+
+.resume-check-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .resume-check-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.resume-check.list-item {
+  margin-bottom: 0;
+}
+
+.resume-check-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.resume-check-label {
+  color: var(--text-main);
+}
+
+.resume-check-detail {
+  font-size: 0.9rem;
 }
 
 /* Loaders */
