@@ -2,59 +2,82 @@
 
 🔗 [Live Demo](https://ai-resume-analyzer-rajcodes.vercel.app/)
 
-A modern, client-side React application that allows users to upload their PDF resumes for instant, AI-powered feedback. It evaluates the resume based on content quality, formatting, and ATS compatibility without relying on a traditional backend server.
+A client-side React app that analyzes a PDF resume with AI and turns the result into a scored report: overall score, strengths, improvements, ATS checklist, performance metrics, keyword and role suggestions. There is no backend server; the PDF is read in the browser and the AI call goes through [Puter.js](https://puter.com).
 
-## ✨ Key Features
+## ✨ Features
 
-- **Instant AI Feedback**: Leverages advanced AI to provide an executive-level summary and detailed analysis of resume quality and impact.
-- **Comprehensive Analytics Dashboard**: Displays an overall score, ATS compatibility checklist, performance metrics, and targeted keyword recommendations.
-- **100% Client-Side Parsing**: Parses PDF resumes directly in the browser using `pdfjs-dist` within a Web Worker, ensuring data privacy and maintaining a responsive UI.
-- **Robust AI Integration**: Utilizes strict JSON-based AI prompting to ensure structured and reliable data extraction for the frontend dashboard.
-- **Premium UI/UX**: Designed a highly responsive, animated user interface utilizing modern CSS techniques and `lucide-react` for an intuitive user experience.
+- **Drag-and-drop or pick a file**: drop a PDF onto the upload area or choose one with the button (keyboard accessible).
+- **In-browser PDF parsing**: text is extracted with Mozilla's `pdfjs-dist` in a Web Worker, so the UI stays responsive.
+- **Structured AI analysis**: the AI is asked for strict JSON, and every response is validated and normalized before rendering (scores clamped to 0–100, malformed fields dropped), so a bad response shows an error instead of a broken dashboard.
+- **Analytics dashboard**: overall score, executive summary, recommended roles, performance metrics, strengths, improvements, ATS checklist, insights and keywords.
+- **Clear error handling**: separate messages for wrong file type, oversized files, too many pages, password-protected PDFs, image-only PDFs, PDFs that take too long to read, AI timeouts and unreadable AI responses, plus error boundaries so a rendering failure never blanks the page.
+
+## 🔒 Privacy
+
+- The PDF file itself never leaves your browser; only its **extracted text** is sent for analysis.
+- That text — including any name, email or phone number in your resume — **is sent to an AI model via Puter.js**, a third-party service. Remove details you don't want to share before uploading.
+- This app keeps no database, no analytics and no saved reports. (Puter.js may keep its own sign-in data in your browser.)
+- The first analysis may open a Puter sign-in window. See [Puter's documentation](https://docs.puter.com) for how its AI usage works.
+
+## 📏 Limits
+
+| Limit | Value |
+|---|---|
+| File type | PDF with selectable text (scanned images are not supported) |
+| File size | 10 MB |
+| Pages | 10 |
+| PDF reading time | 30 seconds |
+| Text analyzed | First 15,000 characters (the report notes when text was cut) |
+| AI timeout | 2 minutes |
 
 ## 🛠 Tech Stack
 
-- **Frontend Framework**: React 19 + Vite
-- **Styling**: Vanilla CSS with custom properties, flexbox/grid layouts, and animations
-- **PDF Parsing**: `pdfjs-dist` (Mozilla's PDF library)
+- **Framework**: React 19 + Vite
+- **Styling**: Plain CSS with custom properties
+- **PDF parsing**: `pdfjs-dist`
+- **AI**: Puter.js
 - **Icons**: `lucide-react`
-- **AI Integration**: Puter.js
 
 ## 🚀 Getting Started
 
-Follow these steps to run the project locally.
+Requires Node.js 22.13 or newer.
 
-### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
+```bash
+git clone https://github.com/Ra-jj/AI-Resume-Analyzer.git
+cd AI-Resume-Analyzer
+npm install
+npm run dev
+```
 
-### Installation
+Then open http://localhost:5173.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/ai-resume-analyzer.git
-   cd ai-resume-analyzer
-   ```
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build into `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Run ESLint |
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+## 💡 How It Works
 
-3. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
+1. **Upload**: the file is checked for type and size before anything else runs.
+2. **Parse**: pdf.js extracts the text from each page in a Web Worker.
+3. **Analyze**: the text is sent to the AI with a prompt that requires a fixed JSON structure.
+4. **Validate**: the response is parsed and normalized into a guaranteed shape.
+5. **Report**: the dashboard renders the normalized result.
 
-4. **Open your browser:**
-   Navigate to `http://localhost:5173` to see the application in action.
+## 📁 Project Structure
 
-## 💡 How it Works
-
-1. **Upload**: Users upload their PDF resume.
-2. **Parsing**: The app parses the PDF using a Web Worker to extract the text content without freezing the UI.
-3. **Analysis**: The extracted text is securely analyzed via an AI prompt structured to return specific insights (score, strengths, ATS compatibility, etc.).
-4. **Results**: The parsed JSON data is dynamically rendered on a comprehensive analytics dashboard.
-
----
-*Built with ❤️ for better career opportunities.*
+```
+src/
+├── App.jsx                  # Upload flow: validation, PDF extraction, AI call
+├── components/
+│   ├── UploadView.jsx       # Upload screen with drag-and-drop
+│   ├── DashboardView.jsx    # Analysis report
+│   └── ErrorBoundary.jsx    # Fallback UI for rendering failures
+└── lib/
+    ├── analysis.js          # JSON extraction and response normalization
+    ├── errors.js            # Error codes and user-facing messages
+    ├── files.js             # File type/size checks
+    └── limits.js            # Limits, timeouts and text helpers
+```

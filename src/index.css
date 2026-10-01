@@ -103,6 +103,20 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+/* A file is being dragged over the dropzone. No transform here: moving the
+   box would slide its edge out from under a stationary pointer and make
+   dragleave/dragenter fire in a loop. */
+.dropzone-wrapper.is-drag-active {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 1px var(--primary-light), 0 10px 50px var(--border-color);
+}
+
+.dropzone-wrapper.is-drag-active .dropzone-inner {
+  border-color: var(--primary-light);
+  background-color: var(--border-glow);
 }
 
 .doc-icon {
@@ -124,11 +138,13 @@ body {
 }
 
 .gradient-btn {
+  position: relative;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: white;
   border: none;
   padding: 14px 32px;
   border-radius: 8px;
+  font-family: inherit;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
@@ -136,6 +152,66 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+/* The upload button is a <label>; keyboard focus lands on the visually
+   hidden file input inside it, so the ring is drawn on the label. Kept as
+   separate rules: an unsupported selector would void a whole selector list. */
+.gradient-btn:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 3px;
+}
+
+.gradient-btn:has(:focus-visible) {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 3px;
+}
+
+@supports not selector(:has(*)) {
+  .gradient-btn:focus-within {
+    outline: 2px solid var(--primary-light);
+    outline-offset: 3px;
+  }
+}
+
+/* Hidden visually but still focusable and announced by screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Compound selector: .card is declared later in this file and would
+   otherwise override the border and height. */
+.card.upload-error {
+  scroll-margin-bottom: 2rem;
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  border-color: var(--danger);
+  color: var(--danger);
+  overflow-wrap: break-word;
+}
+
+/* Centre the 18px icon on the first line of text (line-height 1.6). */
+.upload-error-icon {
+  flex-shrink: 0;
+  margin-top: calc((1.6em - 18px) / 2);
+}
+
+.upload-error p {
+  min-width: 0;
 }
 
 .gradient-btn:hover {
@@ -179,12 +255,31 @@ body {
   color: var(--text-main);
 }
 
+.truncation-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.truncation-notice svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
 .card {
   background: var(--surface-color);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   padding: 1.5rem;
   height: 100%;
+  /* AI text can contain long unbroken tokens (URLs, run-together words).
+     Let them wrap and let grid/flex items shrink, so the dashboard never
+     scrolls sideways on narrow screens. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .card-title {
@@ -248,6 +343,26 @@ body {
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--text-main);
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.metric-name {
+  min-width: 0;
+}
+
+/* Keeps "88/100" on one line; the name next to it is what wraps. */
+.metric-score {
+  flex-shrink: 0;
+  margin-left: 8px;
+  white-space: nowrap;
+  color: var(--primary-light);
+  font-weight: 600;
 }
 
 .metric-bar-bg {
@@ -329,4 +444,35 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Error boundary fallback */
+.error-fallback-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.error-fallback {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  border-color: var(--danger);
+  overflow-wrap: break-word;
+}
+
+.error-fallback-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.error-fallback-message {
+  color: var(--text-muted);
 }
