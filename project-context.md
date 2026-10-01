@@ -24,9 +24,12 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 
 ## Structure
 
-- `src/App.jsx` — upload handling, PDF extraction, AI call, view switching
-- `src/components/UploadView.jsx`, `src/components/DashboardView.jsx` — the two screens
-- `src/index.css` — all styles and design tokens
+- `src/App.jsx` — thin: picks the upload or report screen
+- `src/hooks/useResumeAnalysis.js` — all upload-flow state and actions
+- `src/services/` — side effects: `pdf.js` (lazy pdf.js extraction), `analyze.js` (the only file that touches `puter`)
+- `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, file checks, limits
+- `src/components/` — UploadView, DashboardView, ErrorBoundary
+- `src/index.css` — all styles and design tokens; no inline styles except data-driven CSS custom properties (`--score`, `--value`)
 
 ## Conventions
 
@@ -45,5 +48,6 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 
 ## Known gotchas
 
-- `puter` is a global from a script tag; ESLint needs `/* global puter */`.
+- `puter` is a global from a script tag; ESLint needs `/* global puter */` (only in services/analyze.js).
+- pdf.js is dynamically imported. Chrome caches a failed dynamic import for the page's lifetime, so a retry needs a reload. Never add a global `vite:preloadError` → reload handler.
 - The first `puter.ai.chat` call may open a Puter sign-in popup for the visitor.

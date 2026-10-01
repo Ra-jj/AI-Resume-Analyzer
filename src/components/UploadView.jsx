@@ -4,7 +4,10 @@ import { AlertTriangle } from "lucide-react";
 import { isFileDrag } from "../lib/files.js";
 import { MAX_FILE_SIZE_MB, MAX_PAGES } from "../lib/limits.js";
 
-function UploadView({ loading, error, onFileSelected }) {
+// onUploadIntent runs when the user looks about to choose a file (a file is
+// dragged in, or the pointer or keyboard focus reaches the button), so the
+// PDF reader can start loading early. It must be safe to call repeatedly.
+function UploadView({ loading, error, onFileSelected, onUploadIntent }) {
   const [isDragActive, setIsDragActive] = useState(false);
   // dragenter/dragleave also fire when the pointer crosses the dropzone's own
   // children. Counting enters minus leaves keeps the highlight from
@@ -21,6 +24,7 @@ function UploadView({ loading, error, onFileSelected }) {
   const handleDragEnter = (event) => {
     if (!isFileDrag(event)) return;
     event.preventDefault();
+    onUploadIntent();
     dragDepthRef.current += 1;
     setIsDragActive(true);
   };
@@ -74,16 +78,8 @@ function UploadView({ loading, error, onFileSelected }) {
           role="status"
         >
           <div className="spinner-ring"></div>
-          <h2
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: 600,
-              marginBottom: "0.5rem",
-            }}
-          >
-            Analyzing Your Resume
-          </h2>
-          <p style={{ color: "var(--text-muted)" }}>
+          <h2 className="loading-title">Analyzing Your Resume</h2>
+          <p className="loading-message">
             Please wait while AI reviews your resume...
           </p>
         </div>
@@ -122,7 +118,11 @@ function UploadView({ loading, error, onFileSelected }) {
               and {MAX_PAGES}&nbsp;pages.
             </p>
 
-            <label className="gradient-btn">
+            <label
+              className="gradient-btn"
+              onPointerEnter={onUploadIntent}
+              onFocus={onUploadIntent}
+            >
               Choose PDF File
               <input
                 type="file"

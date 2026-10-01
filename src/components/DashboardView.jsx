@@ -37,15 +37,16 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
   const showKeywords = hasItems(results.recommendedKeywords);
   const showInsightsCard = showInsights || showKeywords;
 
-  const scoreBadge =
+  // The modifier class sets the colour shared by the rating badge and the
+  // score bar.
+  const scoreRating =
     results.overallScore >= 80
-      ? { text: "Excellent", color: "#10b981", bg: "rgba(16, 185, 129, 0.1)" }
+      ? { text: "Excellent", className: "score-panel--excellent" }
       : results.overallScore >= 60
-        ? { text: "Good", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" }
+        ? { text: "Good", className: "score-panel--good" }
         : {
             text: "Needs Improvement",
-            color: "#ef4444",
-            bg: "rgba(239, 68, 68, 0.1)",
+            className: "score-panel--needs-improvement",
           };
 
   return (
@@ -54,7 +55,7 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
         <button type="button" className="back-btn" onClick={onBack}>
           <ArrowLeft size={18} /> Analyze another resume
         </button>
-        <h2 style={{ fontSize: "1.2rem", fontWeight: 600 }}>Analysis Report</h2>
+        <h2 className="dashboard-title">Analysis Report</h2>
       </div>
 
       {wasTextTruncated && (
@@ -70,69 +71,27 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
       <div className="grid grid-cols-12">
         {/* Overall Score */}
         <div className="col-span-12 card flex justify-center items-center py-8">
-          <div className="flex flex-col items-center" style={{ width: "100%" }}>
+          <div className={`score-panel ${scoreRating.className}`}>
             <div
               className="score-circle"
               style={{ "--score": `${results.overallScore}%` }}
             >
               <span className="score-value">{results.overallScore}</span>
             </div>
-            <h3
-              className="mt-4"
-              style={{ fontSize: "1.25rem", color: "var(--text-muted)" }}
-            >
-              Overall Resume Score
-            </h3>
+            <h3 className="score-label">Overall Resume Score</h3>
 
-            <div
-              className="flex items-center gap-2 mt-8"
-              style={{
-                background: scoreBadge.bg,
-                color: scoreBadge.color,
-                padding: "6px 16px",
-                borderRadius: "9999px",
-                fontWeight: 600,
-                fontSize: "0.95rem",
-                border: `1px solid ${scoreBadge.color}40`,
-              }}
-            >
-              <Star
-                fill={scoreBadge.color}
-                color={scoreBadge.color}
-                size={16}
-              />{" "}
-              {scoreBadge.text}
+            <div className="score-badge">
+              <Star fill="currentColor" size={16} /> {scoreRating.text}
             </div>
 
-            <div
-              style={{
-                width: "100%",
-                maxWidth: "800px",
-                height: "14px",
-                background: "rgba(255,255,255,0.05)",
-                borderRadius: "9999px",
-                marginTop: "16px",
-                overflow: "hidden",
-              }}
-            >
+            <div className="score-bar">
               <div
-                style={{
-                  width: `${results.overallScore}%`,
-                  height: "100%",
-                  background: scoreBadge.color,
-                  borderRadius: "9999px",
-                  transition: "width 1s ease-out",
-                }}
+                className="score-bar-fill"
+                style={{ "--value": `${results.overallScore}%` }}
               ></div>
             </div>
 
-            <p
-              style={{
-                marginTop: "12px",
-                fontSize: "0.85rem",
-                color: "var(--text-muted)",
-              }}
-            >
+            <p className="score-note">
               Score based on content quality, formatting, and keyword usage
             </p>
           </div>
@@ -144,15 +103,7 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
             <h3 className="card-title">
               <ClipboardList size={20} /> Executive Summary
             </h3>
-            <p
-              style={{
-                color: "var(--text-muted)",
-                fontSize: "1.05rem",
-                lineHeight: 1.7,
-              }}
-            >
-              {results.executiveSummary}
-            </p>
+            <p className="summary-text">{results.executiveSummary}</p>
           </div>
         )}
 
@@ -162,23 +113,9 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
             <h3 className="card-title">
               <Briefcase size={20} /> Recommended Roles to Apply For
             </h3>
-            <div
-              className="flex"
-              style={{ gap: "20px", flexWrap: "wrap", marginTop: "12px" }}
-            >
+            <div className="role-list">
               {results.recommendedRoles.map((role, idx) => (
-                <span
-                  key={idx}
-                  style={{
-                    background: "var(--border-glow)",
-                    color: "var(--primary-light)",
-                    border: "1px solid var(--border-color)",
-                    padding: "8px 16px",
-                    borderRadius: "9999px",
-                    fontSize: "0.95rem",
-                    fontWeight: 500,
-                  }}
-                >
+                <span className="role-chip" key={idx}>
                   {role}
                 </span>
               ))}
@@ -192,7 +129,7 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
             <h3 className="card-title">
               <BarChart2 size={20} /> Performance Metrics
             </h3>
-            <div className="grid grid-cols-2" style={{ gap: "2rem" }}>
+            <div className="metric-grid">
               {results.performanceMetrics.map((metric, idx) => (
                 <div key={idx}>
                   <div className="metric-row">
@@ -202,7 +139,7 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
                   <div className="metric-bar-bg">
                     <div
                       className="metric-bar-fill"
-                      style={{ width: `${metric.score}%` }}
+                      style={{ "--value": `${metric.score}%` }}
                     ></div>
                   </div>
                 </div>
@@ -214,7 +151,7 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
         {/* Strengths & Improvements */}
         {showStrengths && (
           <div className={`${pairSpan(showImprovements)} card`}>
-            <h3 className="card-title" style={{ color: "var(--success)" }}>
+            <h3 className="card-title card-title--success">
               <CheckCircle size={20} /> Top Strengths
             </h3>
             {results.topStrengths.map((str, idx) => (
@@ -222,7 +159,7 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
                 <CheckCircle
                   size={18}
                   color="var(--success)"
-                  style={{ flexShrink: 0, marginTop: "2px" }}
+                  className="list-item-icon"
                 />
                 <span>{str}</span>
               </div>
@@ -232,7 +169,7 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
 
         {showImprovements && (
           <div className={`${pairSpan(showStrengths)} card`}>
-            <h3 className="card-title" style={{ color: "var(--warning)" }}>
+            <h3 className="card-title card-title--warning">
               <AlertTriangle size={20} /> Main Improvements
             </h3>
             {results.mainImprovements.map((imp, idx) => (
@@ -240,7 +177,7 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
                 <AlertTriangle
                   size={18}
                   color="var(--warning)"
-                  style={{ flexShrink: 0, marginTop: "2px" }}
+                  className="list-item-icon"
                 />
                 <span>{imp}</span>
               </div>
@@ -251,38 +188,24 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
         {/* ATS Checklist & Insights */}
         {showAtsCard && (
           <div className={`${pairSpan(showInsightsCard)} card`}>
-            <h3 className="card-title" style={{ color: "var(--primary-light)" }}>
+            <h3 className="card-title">
               <ShieldCheck size={20} /> ATS Compatibility
             </h3>
             {showAtsSummary && (
-              <p
-                style={{
-                  color: "var(--text-muted)",
-                  marginBottom: showChecklist ? "1.5rem" : 0,
-                }}
-              >
-                {results.atsOptimization}
-              </p>
+              <p className="ats-summary">{results.atsOptimization}</p>
             )}
 
             {results.atsCompatibilityChecklist.map((check, idx) => (
               <div
-                className="list-item"
+                className={`list-item checklist-item${check.passed ? "" : " checklist-item--failed"}`}
                 key={idx}
-                style={{ alignItems: "center" }}
               >
                 {check.passed ? (
                   <CheckCircle size={18} color="var(--success)" />
                 ) : (
                   <AlertTriangle size={18} color="var(--danger)" />
                 )}
-                <span
-                  style={{
-                    color: check.passed ? "var(--text-main)" : "var(--danger)",
-                  }}
-                >
-                  {check.item}
-                </span>
+                <span>{check.item}</span>
               </div>
             ))}
           </div>
@@ -292,21 +215,12 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
           <div className={`${pairSpan(showAtsCard)} card`}>
             {showInsights && (
               <>
-                <h3 className="card-title" style={{ color: "var(--secondary)" }}>
+                <h3 className="card-title card-title--secondary">
                   <Lightbulb size={20} /> Deep Insights
                 </h3>
                 {results.resumeInsights.map((insight, idx) => (
                   <div className="list-item" key={idx}>
-                    <div
-                      style={{
-                        width: "6px",
-                        height: "6px",
-                        borderRadius: "50%",
-                        background: "var(--secondary)",
-                        margin: "8px",
-                        flexShrink: 0,
-                      }}
-                    ></div>
+                    <div className="insight-dot"></div>
                     <span>{insight}</span>
                   </div>
                 ))}
@@ -316,8 +230,7 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
             {showKeywords && (
               <>
                 <h3
-                  className={`card-title${showInsights ? " mt-8" : ""}`}
-                  style={{ color: "var(--secondary)" }}
+                  className={`card-title card-title--secondary${showInsights ? " mt-8" : ""}`}
                 >
                   <Target size={20} /> Recommended Keywords
                 </h3>

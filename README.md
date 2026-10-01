@@ -7,7 +7,7 @@ A client-side React app that analyzes a PDF resume with AI and turns the result 
 ## ✨ Features
 
 - **Drag-and-drop or pick a file**: drop a PDF onto the upload area or choose one with the button (keyboard accessible).
-- **In-browser PDF parsing**: text is extracted with Mozilla's `pdfjs-dist` in a Web Worker, so the UI stays responsive.
+- **In-browser PDF parsing**: text is extracted with Mozilla's `pdfjs-dist` in a Web Worker, so the UI stays responsive. The PDF library is loaded on demand, keeping the first page load small.
 - **Structured AI analysis**: the AI is asked for strict JSON, and every response is validated and normalized before rendering (scores clamped to 0–100, malformed fields dropped), so a bad response shows an error instead of a broken dashboard.
 - **Analytics dashboard**: overall score, executive summary, recommended roles, performance metrics, strengths, improvements, ATS checklist, insights and keywords.
 - **Clear error handling**: separate messages for wrong file type, oversized files, too many pages, password-protected PDFs, image-only PDFs, PDFs that take too long to read, AI timeouts and unreadable AI responses, plus error boundaries so a rendering failure never blanks the page.
@@ -70,14 +70,21 @@ Then open http://localhost:5173.
 
 ```
 src/
-├── App.jsx                  # Upload flow: validation, PDF extraction, AI call
+├── App.jsx                     # Switches between the upload and report screens
+├── main.jsx                    # Entry point, top-level error boundary, stray-drop guard
+├── index.css                   # All styles and design tokens
+├── hooks/
+│   └── useResumeAnalysis.js    # Upload-flow state: validate → extract → analyze
+├── services/
+│   ├── pdf.js                  # Lazy-loaded pdf.js text extraction
+│   └── analyze.js              # Puter.js AI call and response handling
 ├── components/
-│   ├── UploadView.jsx       # Upload screen with drag-and-drop
-│   ├── DashboardView.jsx    # Analysis report
-│   └── ErrorBoundary.jsx    # Fallback UI for rendering failures
-└── lib/
-    ├── analysis.js          # JSON extraction and response normalization
-    ├── errors.js            # Error codes and user-facing messages
-    ├── files.js             # File type/size checks
-    └── limits.js            # Limits, timeouts and text helpers
+│   ├── UploadView.jsx          # Upload screen with drag-and-drop
+│   ├── DashboardView.jsx       # Analysis report
+│   └── ErrorBoundary.jsx       # Fallback UI for rendering failures
+└── lib/                        # Pure helpers (no React, no network)
+    ├── analysis.js             # JSON extraction and response normalization
+    ├── errors.js               # Error codes and user-facing messages
+    ├── files.js                # File type/size checks
+    └── limits.js               # Limits, timeouts and text helpers
 ```

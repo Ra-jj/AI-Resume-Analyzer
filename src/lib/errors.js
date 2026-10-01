@@ -16,6 +16,8 @@ const ERROR_MESSAGES = {
     "Too little selectable text was found in this PDF to analyze. If it's a scanned image, export it as a text-based PDF and try again.",
   PDF_TIMEOUT:
     "Reading this PDF took too long. Try re-exporting it as a standard PDF and uploading again.",
+  PDF_LIB_LOAD:
+    "The PDF reader didn't load. Check your connection, then reload the page and try again.",
   AI_UNAVAILABLE:
     "The AI service didn't load. Check that js.puter.com isn't blocked by an extension or network, then reload the page.",
   AI_TIMEOUT: `The AI didn't respond within ${Math.round(AI_TIMEOUT_MS / 60000)} minutes. If a Puter sign-in window opened, finish signing in, then try again.`,

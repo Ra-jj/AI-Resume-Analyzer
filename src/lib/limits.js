@@ -1,5 +1,5 @@
-// Input limits for a single analysis. Kept in one place so the checks in
-// App.jsx and the wording shown to the user can't drift apart.
+// Input limits for a single analysis. Kept in one place so the checks that
+// enforce them and the wording shown to the user can't drift apart.
 
 export const MAX_FILE_SIZE_MB = 10;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -14,8 +14,9 @@ export const MAX_ANALYZED_CHARACTERS = 15000;
 
 export const AI_TIMEOUT_MS = 120000;
 
-// Upper bound on pdf.js parsing, so a file that never finishes can't leave
-// the loading state up forever.
+// Upper bound on loading pdf.js, and separately on parsing a file with it, so
+// neither a stalled download nor a file that never finishes can leave the
+// loading state up forever.
 export const PDF_TIMEOUT_MS = 30000;
 
 export function countNonWhitespaceCharacters(text) {
