@@ -128,7 +128,6 @@ async function requestAnalysis(resumeText) {
   try {
     // Promise.resolve().then() turns a synchronous throw from puter into a rejection.
     response = await withTimeout(
-      // @ts-ignore
       Promise.resolve().then(() => puter.ai.chat(buildAnalysisPrompt(resumeText))),
       AI_TIMEOUT_MS,
       () => new AnalysisError("AI_TIMEOUT"),
