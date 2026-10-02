@@ -61,6 +61,13 @@ Then open http://localhost:5173.
 | `npm run build` | Production build into `dist/` |
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | Run ESLint |
+| `npm test` | Run the unit tests (Vitest) |
+| `npm run test:watch` | Run the unit tests in watch mode |
+
+## 🧪 Testing
+
+- **Unit tests**: about 630 Vitest tests next to the modules they cover (`src/**/*.test.js`), for response normalization, AI error mapping, resume checks, score blending, prompt building and the Puter call (with a stubbed `puter`).
+- **CI**: every push to `main` and every pull request runs install, lint, tests and build in GitHub Actions.
 
 ## 💡 How It Works
 
@@ -92,6 +99,7 @@ src/
     ├── resumeChecks.js         # Automated resume checks computed in code
     ├── report.js               # Blends AI and check scores into the report
     ├── aiErrors.js             # Maps Puter failures to error codes
+    ├── prompt.js               # Builds the AI messages and strips injected delimiter tags
     ├── errors.js               # Error codes and user-facing messages
     ├── files.js                # File type/size checks
     └── limits.js               # Limits, timeouts and text helpers

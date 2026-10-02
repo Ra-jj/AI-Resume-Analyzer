@@ -477,7 +477,8 @@ body {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: conic-gradient(var(--primary) var(--score), rgba(255,255,255,0.05) 0);
+  /* The ring follows the rating colour set by .score-panel--*. */
+  background: conic-gradient(var(--rating-color, var(--primary)) var(--score), rgba(255,255,255,0.05) 0);
   display: flex;
   align-items: center;
   justify-content: center;

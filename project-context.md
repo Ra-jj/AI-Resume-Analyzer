@@ -20,14 +20,16 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - Run dev: `npm run dev` (http://localhost:5173)
 - Lint: `npm run lint`
 - Build: `npm run build`
-- Test: none yet (planned: Vitest + Playwright)
+- Test: `npm test` (Vitest, `src/**/*.test.js`, node environment; `npm run test:watch` for watch mode). Playwright e2e planned.
+- CI: `.github/workflows/ci.yml` runs `npm ci` → lint (`--max-warnings=0`) → `npm test` → build on Node 22.
 
 ## Structure
 
 - `src/App.jsx` — thin: picks the upload or report screen
 - `src/hooks/useResumeAnalysis.js` — all upload-flow state and actions
 - `src/services/` — side effects: `pdf.js` (lazy pdf.js extraction), `analyze.js` (the only file that touches `puter`)
-- `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, AI-failure mapping, file checks, limits, resume checks, score blending
+- `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, AI-failure mapping, file checks, limits, resume checks, score blending, prompt building (`prompt.js`)
+- Tests are colocated as `*.test.js` next to the module they cover
 - `src/components/` — UploadView, JobDescriptionInput, DashboardView, ErrorBoundary
 - `src/index.css` — all styles and design tokens; no inline styles except data-driven CSS custom properties (`--score`, `--value`)
 
