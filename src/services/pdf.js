@@ -10,7 +10,9 @@ function loadPdfjs() {
   if (!pdfjsPromise) {
     pdfjsPromise = Promise.all([
       import("pdfjs-dist"),
-      import("pdfjs-dist/build/pdf.worker.mjs?url"),
+      // The worker is copied into the build as-is, without Vite minifying
+      // it, so the package's own minified copy is the one to ship.
+      import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
     ]).then(
       ([pdfjsLib, { default: workerUrl }]) => {
         pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;

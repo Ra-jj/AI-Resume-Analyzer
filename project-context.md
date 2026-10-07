@@ -9,7 +9,7 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - Language: JavaScript (JSX) — deliberately NOT TypeScript (owner's decision)
 - Framework: React 19 + Vite 8
 - AI: Puter.js loaded from `https://js.puter.com/v2/` in `index.html` (global `puter`, `puter.ai.chat`). Keep Puter — no serverless backend (owner's decision).
-- PDF: `pdfjs-dist` 6 with its worker imported via `?url`
+- PDF: `pdfjs-dist` 6.4 (must stay ≥6.2.108: GHSA-hq66-cqwq-w95j) with its minified worker imported via `pdf.worker.min.mjs?url`
 - Styling: plain CSS with custom properties in `src/index.css`; icons from `lucide-react`
 - Package manager: npm
 - Node: v24 locally
@@ -20,8 +20,9 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - Run dev: `npm run dev` (http://localhost:5173)
 - Lint: `npm run lint`
 - Build: `npm run build`
-- Test: `npm test` (Vitest, `src/**/*.test.js`, node environment; `npm run test:watch` for watch mode). Playwright e2e planned.
-- CI: `.github/workflows/ci.yml` runs `npm ci` → lint (`--max-warnings=0`) → `npm test` → build on Node 22.
+- Test: `npm test` (Vitest, `src/**/*.test.js`, node environment; `npm run test:watch` for watch mode).
+- E2E: `npm run test:e2e` (Playwright, Chromium only, `e2e/*.spec.js`; run `npx playwright install chromium` once). Builds and serves a fresh production build on port 4317 (never reuses a running server); Puter, Google Fonts and every other external host are blocked/stubbed (`e2e/helpers/`). Fixtures in `e2e/fixtures/`.
+- CI: `.github/workflows/ci.yml` runs `npm ci` → lint (`--max-warnings=0`) → `npm test` → build → Playwright install → `npm run test:e2e` on Node 22; uploads the Playwright report on failure.
 
 ## Structure
 

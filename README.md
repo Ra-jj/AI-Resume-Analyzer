@@ -63,11 +63,13 @@ Then open http://localhost:5173.
 | `npm run lint` | Run ESLint |
 | `npm test` | Run the unit tests (Vitest) |
 | `npm run test:watch` | Run the unit tests in watch mode |
+| `npm run test:e2e` | Run the end-to-end tests (Playwright; run `npx playwright install chromium` once first) |
 
 ## 🧪 Testing
 
 - **Unit tests**: about 630 Vitest tests next to the modules they cover (`src/**/*.test.js`), for response normalization, AI error mapping, resume checks, score blending, prompt building and the Puter call (with a stubbed `puter`).
-- **CI**: every push to `main` and every pull request runs install, lint, tests and build in GitHub Actions.
+- **End-to-end tests**: 54 Playwright tests drive a fresh production build in Chromium with real PDFs and a stubbed AI: uploads, drag-and-drop, the job description flow, score ratings, almost every error message (all but unreadable-file and unexpected-crash), keyboard access and phone-width layout. No test ever contacts Puter or any other outside site.
+- **CI**: every push to `main` and every pull request runs install, lint, unit tests, build and end-to-end tests in GitHub Actions.
 
 ## 💡 How It Works
 
