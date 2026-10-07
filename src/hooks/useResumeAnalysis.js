@@ -31,7 +31,12 @@ function getPreflightErrorCode(file, jobDescription) {
  */
 export function useResumeAnalysis() {
   const [view, setView] = useState("upload"); // 'upload' or 'dashboard'
-  const [loading, setLoading] = useState(false);
+  // What the analysis is doing now: "reading" while pdf.js extracts the
+  // text, "analyzing" while the AI request (and its one retry) runs, null
+  // when idle. There is no separate "building" stage: the report is built
+  // in the same task the AI's reply arrives, so it would never be shown.
+  const [stage, setStage] = useState(null);
+  const loading = stage !== null;
   const [error, setError] = useState(null); // { code, message } or null
   const [results, setResults] = useState(null);
   const [wasTextTruncated, setWasTextTruncated] = useState(false);
@@ -43,6 +48,10 @@ export function useResumeAnalysis() {
   // `loading` only updates on the next render; this ref blocks a second file
   // that arrives before then (e.g. a double drop).
   const isProcessingRef = useRef(false);
+  // True once the user has left a report for the upload screen, which then
+  // moves focus to its file input. False on first load, so opening the app
+  // never moves focus.
+  const [hasReturnedFromReport, setHasReturnedFromReport] = useState(false);
 
   const processFile = async (file) => {
     if (!file || isProcessingRef.current) return;
@@ -55,7 +64,7 @@ export function useResumeAnalysis() {
     }
 
     isProcessingRef.current = true;
-    setLoading(true);
+    setStage("reading");
     setError(null);
     try {
       const pdfText = collapseWhitespace(await extractPdfText(file));
@@ -66,6 +75,7 @@ export function useResumeAnalysis() {
       const resumeCheckResult = runResumeChecks(pdfText);
       const { text, truncated } = truncateForAnalysis(pdfText);
 
+      setStage("analyzing");
       const analysis = await requestAnalysis(text, preparedJobDescription.text);
       setResults(buildReport(analysis, resumeCheckResult));
       setWasTextTruncated(truncated);
@@ -79,7 +89,7 @@ export function useResumeAnalysis() {
       setError(toUserError(err));
     } finally {
       isProcessingRef.current = false;
-      setLoading(false);
+      setStage(null);
     }
   };
 
@@ -96,6 +106,7 @@ export function useResumeAnalysis() {
   const clearJobDescription = () => setJobDescription("");
 
   const resetToUpload = () => {
+    setHasReturnedFromReport(true);
     setView("upload");
     setResults(null);
     setWasTextTruncated(false);
@@ -105,6 +116,8 @@ export function useResumeAnalysis() {
   return {
     view,
     loading,
+    stage,
+    hasReturnedFromReport,
     error,
     results,
     wasTextTruncated,

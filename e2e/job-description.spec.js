@@ -3,11 +3,13 @@ import { MAX_JOB_DESCRIPTION_CHARACTERS, prepareJobDescription } from "../src/li
 import { buildAnalysisMessages } from "../src/lib/prompt.js";
 import {
   addJobDescriptionButton,
+  analysisStatus,
   chooseFixture,
   dashboardHeading,
   expect,
   fileInput,
   jobDescriptionField,
+  loadingHeading,
   test,
   uploadHeading,
 } from "./helpers/test.js";
@@ -89,7 +91,8 @@ test("rejects a too-short job description on the field itself, without calling t
   await expect(field).toBeFocused();
   // Not in the general error card under the dropzone.
   await expect(page.getByRole("alert")).toHaveCount(0);
-  await expect(page.getByRole("status")).toHaveCount(0);
+  await expect(loadingHeading(page)).toHaveCount(0);
+  await expect(analysisStatus(page)).toBeEmpty();
   await expect(uploadHeading(page)).toBeVisible();
   expect(await getPuterCalls(page)).toEqual([]);
   // Cleared so that the same file can be chosen again.

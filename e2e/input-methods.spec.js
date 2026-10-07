@@ -1,12 +1,14 @@
 import { AnalysisError } from "../src/lib/errors.js";
 import {
   addJobDescriptionButton,
+  analysisStatus,
   createFileDataTransfer,
   dashboardHeading,
   expect,
   fileInput,
   fixturePath,
   isPdfLibraryUrl,
+  loadingHeading,
   test,
 } from "./helpers/test.js";
 import { getPuterCalls, releaseHeldReply, replies, stubPuter } from "./helpers/puter.js";
@@ -133,7 +135,8 @@ test.describe("drag and drop", () => {
     }, dataTransfer);
 
     expect(outcome).toEqual({ dragoverCancelled: true, dropEffect: "none", dropCancelled: true });
-    await expect(page.getByRole("status")).toHaveCount(0);
+    await expect(loadingHeading(page)).toHaveCount(0);
+    await expect(analysisStatus(page)).toBeEmpty();
     expect(await getPuterCalls(page)).toEqual([]);
   });
 });

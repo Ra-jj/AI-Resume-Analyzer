@@ -3,11 +3,13 @@ import { buildAnalysisMessages } from "../src/lib/prompt.js";
 import { combineScores } from "../src/lib/report.js";
 import {
   addJobDescriptionButton,
+  analysisStatus,
   chooseFixture,
   dashboardHeading,
   expect,
   isPdfLibraryUrl,
   isPdfWorkerUrl,
+  loadingHeading,
   test,
   uploadHeading,
 } from "./helpers/test.js";
@@ -49,14 +51,17 @@ test("analyzes a resume end to end, then returns to a clean upload view", async 
 
   await chooseFixture(page, "resume.pdf");
 
-  // Loading: the spinner replaces the dropzone and the job description.
-  const loading = page.getByRole("status");
-  await expect(loading).toContainText("Analyzing Your Resume");
+  // Loading: the progress steps replace the dropzone and the job
+  // description. The status line names the current step.
+  const loading = analysisStatus(page);
+  await expect(loading).toHaveText("Analyzing with AI, step 2 of 3");
   await expect(uploadHeading(page)).toHaveCount(0);
   await expect(addJobDescriptionButton(page)).toHaveCount(0);
 
   await releaseHeldReply(page);
   await expect(dashboardHeading(page)).toBeVisible();
+  await expect(loadingHeading(page)).toHaveCount(0);
+  // The status line belongs to the upload screen, which the report replaced.
   await expect(loading).toHaveCount(0);
 
   // Blended score: 70% AI review + 30% resume checks.

@@ -3,13 +3,19 @@ import { AlertTriangle } from "lucide-react";
 
 import { isFileDrag } from "../lib/files.js";
 import { MAX_FILE_SIZE_MB, MAX_PAGES } from "../lib/limits.js";
+import AnalysisProgress, { AnalysisStatus } from "./AnalysisProgress.jsx";
 import JobDescriptionInput from "./JobDescriptionInput.jsx";
 
 // onUploadIntent runs when the user looks about to choose a file (a file is
 // dragged in, or the pointer or keyboard focus reaches the button), so the
 // PDF reader can start loading early. It must be safe to call repeatedly.
+// focusFileInputOnMount is true when the user has come back from a report
+// with "Analyze another resume": choosing the next file is what they asked
+// to do, so focus starts on the file input.
 function UploadView({
   loading,
+  stage,
+  focusFileInputOnMount,
   error,
   onFileSelected,
   onUploadIntent,
@@ -23,10 +29,17 @@ function UploadView({
   // flickering off while a file is dragged over the icon or text.
   const dragDepthRef = useRef(0);
   const errorRef = useRef(null);
+  const fileInputRef = useRef(null);
   // A too-short job description is shown on the field itself; every other
   // error goes in the card under the dropzone.
   const jobDescriptionError = error?.code === "JD_TOO_SHORT" ? error : null;
   const generalError = jobDescriptionError ? null : error;
+
+  useEffect(() => {
+    // In effect this runs once, on mount: the flag only turns true while a
+    // report is showing, so it doesn't change while this screen is mounted.
+    if (focusFileInputOnMount) fileInputRef.current?.focus();
+  }, [focusFileInputOnMount]);
 
   useEffect(() => {
     // On phones the error card renders below the fold, under the dropzone.
@@ -96,17 +109,7 @@ function UploadView({
       {/* Distinct keys stop React from reusing the spinner's nodes as the
           dropzone, which would animate the spinner's cyan border into it. */}
       {loading ? (
-        <div
-          key="loading"
-          className="loading-container animate-slide-up"
-          role="status"
-        >
-          <div className="spinner-ring"></div>
-          <h2 className="loading-title">Analyzing Your Resume</h2>
-          <p className="loading-message">
-            Please wait while AI reviews your resume...
-          </p>
-        </div>
+        <AnalysisProgress key="loading" stage={stage} />
       ) : (
         <div
           key="dropzone"
@@ -143,12 +146,13 @@ function UploadView({
             </p>
 
             <label
-              className="gradient-btn"
+              className="gradient-btn choose-file-btn"
               onPointerEnter={onUploadIntent}
               onFocus={onUploadIntent}
             >
               Choose PDF File
               <input
+                ref={fileInputRef}
                 type="file"
                 className="visually-hidden"
                 accept="application/pdf,.pdf"
@@ -158,6 +162,18 @@ function UploadView({
             </label>
           </div>
         </div>
+      )}
+
+      {/* Outside the condition above: the region stays in the page,
+          empty at rest, so the first step is announced too. */}
+      <AnalysisStatus stage={stage} />
+
+      {!loading && (
+        <p className="privacy-note">
+          Your resume&apos;s text (and the job description, if you add one) is
+          sent to an AI model through Puter.js to create your report. This app
+          doesn&apos;t store it.
+        </p>
       )}
 
       {generalError && (

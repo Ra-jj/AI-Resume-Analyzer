@@ -63,6 +63,19 @@ export function dashboardHeading(page) {
   return page.getByRole("heading", { name: "Analysis Report" });
 }
 
+/** The loading screen's heading, shown only while a resume is analyzed. */
+export function loadingHeading(page) {
+  return page.getByRole("heading", { name: "Analyzing Your Resume" });
+}
+
+/**
+ * The status line that names the current analysis step. Always on the
+ * upload screen; empty when nothing is being analyzed.
+ */
+export function analysisStatus(page) {
+  return page.getByRole("status");
+}
+
 export function uploadHeading(page) {
   return page.getByRole("heading", { name: "Upload Your Resume" });
 }

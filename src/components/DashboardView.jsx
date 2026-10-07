@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import {
   CheckCircle,
   AlertTriangle,
@@ -12,13 +13,18 @@ import {
   Info,
   ListChecks,
   ScanSearch,
+  Check,
+  Copy,
+  Printer,
 } from "lucide-react";
 
 import { MAX_ANALYZED_CHARACTERS } from "../lib/limits.js";
 import {
   AI_SCORE_WEIGHT_PERCENT,
   CHECKS_SCORE_WEIGHT_PERCENT,
+  getScoreRating,
 } from "../lib/report.js";
+import { buildReportSummaryText } from "../lib/reportText.js";
 
 const hasText = (value) => typeof value === "string" && value.length > 0;
 const hasItems = (value) => Array.isArray(value) && value.length > 0;
@@ -29,7 +35,102 @@ const isScore = (value) => Number.isFinite(value);
 const pairSpan = (isPartnerShown) =>
   isPartnerShown ? "col-span-6" : "col-span-12";
 
+// The modifier class for each rating sets the colour shared by the rating
+// badge, the score ring and the score bar.
+const RATING_CLASS_NAMES = {
+  Excellent: "score-panel--excellent",
+  Good: "score-panel--good",
+  "Needs Improvement": "score-panel--needs-improvement",
+};
+
+// How long "Summary copied" stays on screen.
+const COPIED_MESSAGE_MS = 4000;
+
+const COPY_FAILED_MESSAGE =
+  "Couldn't copy the summary. Select the report text and copy it manually.";
+
+/**
+ * "Copy summary" and "Print or save as PDF", with the copy result shown under
+ * them. The result line is a polite live region that is always in the page
+ * (empty when idle), so each change is announced once.
+ */
+function ReportActions({ results }) {
+  // "idle", "copied" or "failed"
+  const [copyStatus, setCopyStatus] = useState("idle");
+  const clearCopiedTimerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(clearCopiedTimerRef.current), []);
+
+  const handleCopySummary = async () => {
+    clearTimeout(clearCopiedTimerRef.current);
+    try {
+      if (typeof navigator.clipboard?.writeText !== "function") {
+        throw new Error("navigator.clipboard.writeText is not available");
+      }
+      await navigator.clipboard.writeText(buildReportSummaryText(results));
+      setCopyStatus("copied");
+      clearCopiedTimerRef.current = setTimeout(
+        () => setCopyStatus("idle"),
+        COPIED_MESSAGE_MS,
+      );
+    } catch (err) {
+      console.error("[resume-analyzer] copying the summary failed:", err);
+      setCopyStatus("failed");
+    }
+  };
+
+  // Opens the browser's print dialog, where the report can be printed or
+  // saved as a PDF. The print stylesheet in index.css lays the report out
+  // for paper.
+  const handlePrint = () => window.print();
+
+  return (
+    <>
+      <div className="report-actions">
+        <button
+          type="button"
+          className="report-action-btn"
+          onClick={handleCopySummary}
+        >
+          <Copy size={16} aria-hidden="true" /> Copy summary
+        </button>
+        <button type="button" className="report-action-btn" onClick={handlePrint}>
+          <Printer size={16} aria-hidden="true" /> Print or save as PDF
+        </button>
+      </div>
+      <p
+        className={`report-action-feedback${copyStatus === "failed" ? " report-action-feedback--error" : ""}`}
+        aria-live="polite"
+      >
+        {copyStatus === "copied" && (
+          <>
+            <Check size={16} aria-hidden="true" />
+            <span>Summary copied</span>
+          </>
+        )}
+        {copyStatus === "failed" && (
+          <>
+            <AlertTriangle size={16} aria-hidden="true" />
+            <span>{COPY_FAILED_MESSAGE}</span>
+          </>
+        )}
+      </p>
+    </>
+  );
+}
+
 function DashboardView({ results, wasTextTruncated, onBack }) {
+  const headingRef = useRef(null);
+
+  useEffect(() => {
+    // A new report is a new screen: start at its top, with focus on its
+    // heading so screen readers announce it and Tab continues from there.
+    // This screen only appears after the user chose a file, so it never
+    // takes focus on page load.
+    window.scrollTo(0, 0);
+    headingRef.current?.focus({ preventScroll: true });
+  }, []);
+
   if (!results) return null;
 
   const showSummary = hasText(results.executiveSummary);
@@ -52,25 +153,26 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
     ? results.resumeChecks.filter((check) => check.passed).length
     : 0;
 
-  // The modifier class sets the colour shared by the rating badge and the
-  // score bar.
-  const scoreRating =
-    results.overallScore >= 80
-      ? { text: "Excellent", className: "score-panel--excellent" }
-      : results.overallScore >= 60
-        ? { text: "Good", className: "score-panel--good" }
-        : {
-            text: "Needs Improvement",
-            className: "score-panel--needs-improvement",
-          };
+  const ratingText = getScoreRating(results.overallScore);
+  const scoreRating = {
+    text: ratingText,
+    className: RATING_CLASS_NAMES[ratingText],
+  };
 
   return (
     <div className="dashboard-container animate-slide-up">
       <div className="dashboard-header">
         <button type="button" className="back-btn" onClick={onBack}>
-          <ArrowLeft size={18} /> Analyze another resume
+          <ArrowLeft size={18} aria-hidden="true" /> Analyze another resume
         </button>
-        <h2 className="dashboard-title">Analysis Report</h2>
+        {/* Printed above the title instead of the buttons. */}
+        <p className="print-only report-print-brand">AI Resume Analyzer</p>
+        <div className="dashboard-title-row">
+          <h1 ref={headingRef} className="dashboard-title" tabIndex={-1}>
+            Analysis Report
+          </h1>
+          <ReportActions results={results} />
+        </div>
       </div>
 
       {wasTextTruncated && (

@@ -5,6 +5,7 @@ import {
   CHECKS_SCORE_WEIGHT_PERCENT,
   buildReport,
   combineScores,
+  getScoreRating,
 } from "./report.js";
 
 /** round(0.7 × ai + 0.3 × checks) with exact half-up rounding, in integers only. */
@@ -120,5 +121,18 @@ describe("buildReport", () => {
     const snapshot = structuredClone(analysis);
     buildReport(analysis, { score: 0, checks: [] });
     expect(analysis).toEqual(snapshot);
+  });
+});
+
+describe("getScoreRating", () => {
+  it.each([
+    [100, "Excellent"],
+    [80, "Excellent"],
+    [79, "Good"],
+    [60, "Good"],
+    [59, "Needs Improvement"],
+    [0, "Needs Improvement"],
+  ])("rates %i as %s", (score, rating) => {
+    expect(getScoreRating(score)).toBe(rating);
   });
 });

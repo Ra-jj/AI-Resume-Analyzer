@@ -4,6 +4,12 @@
 
 A client-side React app that analyzes a PDF resume with AI and turns the result into a scored report: overall score, strengths, improvements, ATS checklist, performance metrics, keyword and role suggestions. There is no backend server; the PDF is read in the browser and the AI call goes through [Puter.js](https://puter.com).
 
+![Analysis report](docs/screenshots/report.png)
+
+| Upload | Mobile |
+|---|---|
+| ![Upload screen](docs/screenshots/upload.png) | ![Report on a phone](docs/screenshots/mobile.png) |
+
 ## ✨ Features
 
 - **Drag-and-drop or pick a file**: drop a PDF onto the upload area or choose one with the button (keyboard accessible).
@@ -13,6 +19,8 @@ A client-side React app that analyzes a PDF resume with AI and turns the result 
 - **Blended, more stable score**: the overall score combines the AI review (70%) with six automated checks computed in code (30%): length, measurable results, email, phone, LinkedIn/portfolio link and standard sections.
 - **Pinned AI model**: every analysis uses the same model (`claude-sonnet-5-5` via Puter.js), and an unreadable AI reply is retried once automatically.
 - **Analytics dashboard**: overall score, job match, executive summary, recommended roles, performance metrics, resume checks, strengths, improvements, ATS checklist, insights and keywords.
+- **Share the result**: copy a plain-text summary of the report, or print it / save it as a PDF with a clean, light print layout.
+- **Accessible**: step-by-step progress announced to screen readers, focus moved to the report when it opens, visible keyboard focus everywhere, and reduced motion respected.
 - **Clear error handling**: separate messages for wrong file type, oversized files, too many pages, password-protected PDFs, image-only PDFs, PDFs that take too long to read, a too-short job description, AI timeouts, Puter sign-in or usage-limit problems and unreadable AI responses, plus error boundaries so a rendering failure never blanks the page.
 
 ## 🔒 Privacy
@@ -21,6 +29,12 @@ A client-side React app that analyzes a PDF resume with AI and turns the result 
 - That text — including any name, email or phone number in your resume — **is sent to an AI model via Puter.js**, a third-party service, together with the job description if you add one. Remove details you don't want to share before uploading.
 - This app keeps no database, no analytics and no saved reports. (Puter.js may keep its own sign-in data in your browser.)
 - The first analysis may open a Puter sign-in window. See [Puter's documentation](https://docs.puter.com) for how its AI usage works.
+
+## 🛡️ Security
+
+- `vercel.json` sends security headers on every response: `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options: DENY` and a Content-Security-Policy that blocks framing, `<object>`, base-URL changes and cross-site form posts. Script and connection rules are left open on purpose so Puter.js and its sign-in window keep working.
+- `pdfjs-dist` is kept at 6.2.108 or newer ([GHSA-hq66-cqwq-w95j](https://github.com/advisories/GHSA-hq66-cqwq-w95j)).
+- Text inside the resume or job description can't break out of its prompt section (delimiter tags are stripped).
 
 ## 📏 Limits
 
@@ -67,9 +81,15 @@ Then open http://localhost:5173.
 
 ## 🧪 Testing
 
-- **Unit tests**: about 630 Vitest tests next to the modules they cover (`src/**/*.test.js`), for response normalization, AI error mapping, resume checks, score blending, prompt building and the Puter call (with a stubbed `puter`).
-- **End-to-end tests**: 54 Playwright tests drive a fresh production build in Chromium with real PDFs and a stubbed AI: uploads, drag-and-drop, the job description flow, score ratings, almost every error message (all but unreadable-file and unexpected-crash), keyboard access and phone-width layout. No test ever contacts Puter or any other outside site.
+- **Unit tests**: about 665 Vitest tests next to the modules they cover (`src/**/*.test.js`), for response normalization, AI error mapping, resume checks, score blending, prompt building and the Puter call (with a stubbed `puter`).
+- **End-to-end tests**: 89 Playwright tests drive a fresh production build in Chromium with real PDFs and a stubbed AI: uploads, drag-and-drop, the job description flow, score ratings, almost every error message (all but unreadable-file and unexpected-crash), keyboard access, focus and screen-reader announcements, reduced motion, copy and print, security headers and phone-width layout. No test ever contacts Puter or any other outside site.
 - **CI**: every push to `main` and every pull request runs install, lint, unit tests, build and end-to-end tests in GitHub Actions.
+
+## 🗺️ Known follow-ups
+
+- Add a `<main>` landmark and tidy the report's heading levels (h1 → h3 jump).
+- Move focus to the error message after a failed analysis.
+- Join pdf.js text fragments more carefully so long links aren't split in the Resume Checks details.
 
 ## 💡 How It Works
 
@@ -94,12 +114,14 @@ src/
 ├── components/
 │   ├── UploadView.jsx          # Upload screen with drag-and-drop
 │   ├── JobDescriptionInput.jsx # Optional job description field
+│   ├── AnalysisProgress.jsx    # Step-by-step loading indicator
 │   ├── DashboardView.jsx       # Analysis report
 │   └── ErrorBoundary.jsx       # Fallback UI for rendering failures
 └── lib/                        # Pure helpers (no React, no network)
     ├── analysis.js             # JSON extraction and response normalization
     ├── resumeChecks.js         # Automated resume checks computed in code
-    ├── report.js               # Blends AI and check scores into the report
+    ├── report.js               # Blends AI and check scores; score ratings
+    ├── reportText.js           # Plain-text report summary for copying
     ├── aiErrors.js             # Maps Puter failures to error codes
     ├── prompt.js               # Builds the AI messages and strips injected delimiter tags
     ├── errors.js               # Error codes and user-facing messages

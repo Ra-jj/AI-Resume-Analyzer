@@ -27,18 +27,24 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 ## Structure
 
 - `src/App.jsx` — thin: picks the upload or report screen
-- `src/hooks/useResumeAnalysis.js` — all upload-flow state and actions
+- `src/hooks/useResumeAnalysis.js` — all upload-flow state and actions; `stage` ("reading" | "analyzing" | null) drives the progress steps, `loading = stage !== null`
 - `src/services/` — side effects: `pdf.js` (lazy pdf.js extraction), `analyze.js` (the only file that touches `puter`)
 - `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, AI-failure mapping, file checks, limits, resume checks, score blending, prompt building (`prompt.js`)
 - Tests are colocated as `*.test.js` next to the module they cover
-- `src/components/` — UploadView, JobDescriptionInput, DashboardView, ErrorBoundary
+- `src/components/` — UploadView, JobDescriptionInput, AnalysisProgress (+ `AnalysisStatus`, the single always-present `role="status"` line rendered by UploadView), DashboardView, ErrorBoundary
+- e2e helpers: use `loadingHeading(page)` / `analysisStatus(page)` (e2e/helpers/test.js) rather than `getByRole("status")` to detect loading
+- `vercel.json` — security headers (no script/connect CSP, no COOP/COEP: they would break Puter.js). `vite.config.js` reads the same headers into `preview.headers`, so e2e runs under them.
+- `docs/screenshots/` — README images (fictional data)
 - `src/index.css` — all styles and design tokens; no inline styles except data-driven CSS custom properties (`--score`, `--value`)
 
 ## Conventions
 
 - Dark theme, emerald `--primary` / cyan `--secondary`; reuse the CSS variables, don't hardcode new colors.
 - Error/warning strings state what happened plus what the user can do. Never assert a cause that wasn't verified (no "because…", "this means…").
-- Every UI change must not cause horizontal overflow at 390px width.
+- Every UI change must not cause horizontal overflow at 390px width (tests also check 360 and 320).
+- Focus: the report `<h1>` gets programmatic focus on open; "Analyze another resume" returns focus to the file input; nothing takes focus on first load.
+- Respect `prefers-reduced-motion`; print layout uses the `--print-*` tokens in index.css.
+- Score ratings come only from `getScoreRating()` in lib/report.js.
 
 ## Do not touch
 
@@ -52,6 +58,7 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 ## Known gotchas
 
 - `puter` is a global from a script tag; ESLint needs `/* global puter */` (only in services/analyze.js).
+- X-Frame-Options DENY blocks iframe-based layout measurement against the preview server; use Playwright viewport emulation.
 - pdf.js is dynamically imported. Chrome caches a failed dynamic import for the page's lifetime, so a retry needs a reload. Never add a global `vite:preloadError` → reload handler.
 - The first `puter.ai.chat` call may open a Puter sign-in popup for the visitor.
 - The AI model is pinned in one place: `AI_MODEL` in src/services/analyze.js. Call form is `puter.ai.chat(messages, false, { model, normalize: true })`. Puter has no JSON mode, and per-model support for `temperature`/`max_tokens` is unverified, so don't add them.

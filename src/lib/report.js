@@ -13,6 +13,18 @@ function clampScore(score, name) {
   return Math.min(100, Math.max(0, score));
 }
 
+// Lowest overall score for each rating; anything below "Good" is "Needs
+// Improvement".
+const EXCELLENT_MIN_SCORE = 80;
+const GOOD_MIN_SCORE = 60;
+
+/** The rating shown next to an overall score: "Excellent", "Good" or "Needs Improvement". */
+export function getScoreRating(score) {
+  if (score >= EXCELLENT_MIN_SCORE) return "Excellent";
+  if (score >= GOOD_MIN_SCORE) return "Good";
+  return "Needs Improvement";
+}
+
 /** round(0.7 × AI score + 0.3 × checks score), both clamped to 0–100. */
 export function combineScores(aiScore, checksScore) {
   const weightedTotal =

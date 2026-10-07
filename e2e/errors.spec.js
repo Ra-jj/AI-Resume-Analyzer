@@ -2,6 +2,7 @@ import { AnalysisError } from "../src/lib/errors.js";
 import { AI_TIMEOUT_MS, MAX_FILE_SIZE_BYTES, PDF_TIMEOUT_MS } from "../src/lib/limits.js";
 import {
   addJobDescriptionButton,
+  analysisStatus,
   chooseFixture,
   dashboardHeading,
   expect,
@@ -9,6 +10,7 @@ import {
   isPdfLibraryUrl,
   isPdfWorkerUrl,
   jobDescriptionField,
+  loadingHeading,
   test,
   uploadHeading,
 } from "./helpers/test.js";
@@ -100,6 +102,38 @@ test.describe("PDFs that can't be analyzed", () => {
     expect(await getPuterCalls(page)).toEqual([]);
   });
 
+  // pdf.js reports this as "Setting up fake worker failed", which must not
+  // be shown as a problem with the user's file (PDF_PARSE).
+  const workerFailures = [
+    { title: "is aborted", respond: (route) => route.abort() },
+    {
+      title: "returns 404",
+      respond: (route) => route.fulfill({ status: 404, contentType: "text/plain", body: "Not found" }),
+    },
+  ];
+
+  for (const { title, respond } of workerFailures) {
+    test(`PDF_LIB_LOAD: the pdf.js worker download ${title}`, async ({ page }) => {
+      await stubPuter(page, [replies.analysis()]);
+      const workerRequests = [];
+      await page.route(
+        (url) => isPdfWorkerUrl(url.href),
+        (route) => {
+          workerRequests.push(route.request().url());
+          return respond(route);
+        },
+      );
+      await page.goto("/");
+
+      await chooseFixture(page, "resume.pdf");
+
+      await expect(errorCard(page)).toHaveText(messageFor("PDF_LIB_LOAD"));
+      expect(workerRequests.length).toBeGreaterThan(0);
+      await expect(uploadHeading(page)).toBeVisible();
+      expect(await getPuterCalls(page)).toEqual([]);
+    });
+  }
+
   test("PDF_TIMEOUT: reading the PDF doesn't finish in time", async ({ page }) => {
     await page.clock.install();
     await stubPuter(page, [replies.analysis()]);
@@ -112,15 +146,16 @@ test.describe("PDFs that can't be analyzed", () => {
     await chooseFixture(page, "resume.pdf");
     // The read's time limit starts in the same task that asks for the worker.
     await workerRequested;
-    await expect(page.getByRole("status")).toBeVisible();
+    await expect(analysisStatus(page)).toHaveText("Reading your PDF, step 1 of 3");
 
     await page.clock.fastForward(PDF_TIMEOUT_MS - 1_000);
-    await expect(page.getByRole("status")).toBeVisible();
+    await expect(analysisStatus(page)).toHaveText("Reading your PDF, step 1 of 3");
     await expect(errorCard(page)).toHaveCount(0);
 
     await page.clock.fastForward(1_000);
     await expect(errorCard(page)).toHaveText(messageFor("PDF_TIMEOUT"));
-    await expect(page.getByRole("status")).toHaveCount(0);
+    await expect(loadingHeading(page)).toHaveCount(0);
+    await expect(analysisStatus(page)).toBeEmpty();
     expect(await getPuterCalls(page)).toEqual([]);
   });
 });
@@ -227,7 +262,7 @@ test.describe("AI request failures", () => {
 
     await chooseFixture(page, "resume.pdf");
 
-    await expect(page.getByRole("status")).toBeVisible();
+    await expect(loadingHeading(page)).toBeVisible();
     await expect(errorCard(page)).toHaveCount(0);
     await releaseHeldReply(page);
     await expect(dashboardHeading(page)).toBeVisible();
@@ -239,16 +274,17 @@ test.describe("AI request failures", () => {
     await page.goto("/");
 
     await chooseFixture(page, "resume.pdf");
-    await expect(page.getByRole("status")).toContainText("Analyzing Your Resume");
+    await expect(analysisStatus(page)).toHaveText("Analyzing with AI, step 2 of 3");
     await expect.poll(async () => (await getPuterCalls(page)).length).toBe(1);
 
     await page.clock.fastForward(AI_TIMEOUT_MS - 1_000);
-    await expect(page.getByRole("status")).toBeVisible();
+    await expect(analysisStatus(page)).toHaveText("Analyzing with AI, step 2 of 3");
     await expect(errorCard(page)).toHaveCount(0);
 
     await page.clock.fastForward(1_000);
     await expect(errorCard(page)).toHaveText(messageFor("AI_TIMEOUT"));
-    await expect(page.getByRole("status")).toHaveCount(0);
+    await expect(loadingHeading(page)).toHaveCount(0);
+    await expect(analysisStatus(page)).toBeEmpty();
     expect(await getPuterCalls(page)).toHaveLength(1);
   });
 });

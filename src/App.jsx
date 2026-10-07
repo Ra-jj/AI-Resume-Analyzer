@@ -7,6 +7,8 @@ function App() {
   const {
     view,
     loading,
+    stage,
+    hasReturnedFromReport,
     error,
     results,
     wasTextTruncated,
@@ -45,6 +47,8 @@ function App() {
   return (
     <UploadView
       loading={loading}
+      stage={stage}
+      focusFileInputOnMount={hasReturnedFromReport}
       error={error}
       onFileSelected={processFile}
       onUploadIntent={preloadPdfReader}

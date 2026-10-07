@@ -23,6 +23,18 @@
   --warning-border: rgba(245, 158, 11, 0.25);
   --danger-tint: rgba(239, 68, 68, 0.1);
   --danger-border: rgba(239, 68, 68, 0.25);
+
+  /* Print palette, used only by the print stylesheet at the end of this
+     file: dark ink on white paper, with darker accents that stay readable
+     on white. */
+  --print-paper: #ffffff;
+  --print-ink: #18181b;
+  --print-ink-muted: #52525b;
+  --print-rule: #d4d4d8;
+  --print-primary: #047857;
+  --print-secondary: #0369a1;
+  --print-warning: #b45309;
+  --print-danger: #b91c1c;
 }
 
 * {
@@ -378,6 +390,41 @@ body {
   transform: none;
 }
 
+/* The upload button's label stays on one line; the phone layout below
+   leaves it room down to 320px. */
+.choose-file-btn {
+  white-space: nowrap;
+}
+
+/* Under the dropzone: where the resume text goes. */
+.privacy-note {
+  max-width: 34rem;
+  margin-top: 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Phones: less padding around the dropzone, so "Choose PDF File" fits on
+   one line at 320px. */
+@media (max-width: 480px) {
+  .upload-container {
+    padding: 2rem 1rem;
+  }
+
+  .dropzone-wrapper {
+    padding: 1rem;
+  }
+
+  .dropzone-inner {
+    padding: 2.5rem 1rem;
+  }
+
+  .gradient-btn {
+    padding: 14px 24px;
+  }
+}
+
 /* Dashboard Styles */
 .dashboard-container {
   max-width: 1200px;
@@ -385,21 +432,24 @@ body {
   padding: 2rem;
 }
 
+/* The back button on its own line, then the title with the report actions
+   beside it. On narrow screens the actions wrap under the title. */
 .dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .back-btn {
   background: none;
   border: none;
+  border-radius: 6px;
+  padding: 4px 2px;
+  margin-bottom: 0.75rem;
   color: var(--text-muted);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  font-family: inherit;
   font-size: 1rem;
   transition: color 0.2s;
 }
@@ -408,9 +458,116 @@ body {
   color: var(--text-main);
 }
 
+.back-btn:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 3px;
+}
+
+.dashboard-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
 .dashboard-title {
   font-size: 1.2rem;
   font-weight: 600;
+}
+
+/* Focus only reaches the title from script (tabIndex -1), when a report
+   opens. It moves the screen reader there; a ring would only add noise. */
+.dashboard-title:focus {
+  outline: none;
+}
+
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.report-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: none;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Only where hovering is real: on touch screens a tap would otherwise leave
+   the button highlighted. */
+@media (hover: hover) {
+  .report-action-btn:hover {
+    background: var(--border-glow);
+  }
+}
+
+.report-action-btn:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 3px;
+}
+
+/* "Summary copied" or the copy error, on its own line under the actions.
+   One line is always reserved, so the confirmation appearing and clearing
+   doesn't move the report. */
+.report-action-feedback {
+  flex-basis: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 6px;
+  min-height: 1.6em;
+  margin-top: -0.25rem;
+  color: var(--success);
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.report-action-feedback svg {
+  flex-shrink: 0;
+  margin-top: calc((1.6em - 16px) / 2);
+}
+
+.report-action-feedback--error {
+  color: var(--danger);
+}
+
+/* Phones: the actions take the full width under the title. Side by side when
+   both fit, otherwise one per row, each as wide as the screen. */
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .report-actions {
+    width: 100%;
+  }
+
+  .report-action-btn {
+    flex: 1 1 auto;
+  }
+
+  .report-action-feedback {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+/* Shown only on paper (see the print stylesheet). */
+.print-only {
+  display: none;
 }
 
 .truncation-notice {
@@ -868,11 +1025,57 @@ body {
 .loading-title {
   font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
 }
 
-.loading-message {
+/* The three analysis steps, left-aligned as a block in the centred loader. */
+.progress-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  text-align: left;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   color: var(--text-muted);
+}
+
+.progress-step-marker {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+}
+
+.progress-step--done .progress-step-marker {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--bg-color);
+}
+
+.progress-step--current {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.progress-step--current .progress-step-marker {
+  border-color: var(--secondary);
+}
+
+.progress-step--current .progress-step-marker::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--secondary);
 }
 
 /* Error boundary fallback */
@@ -904,4 +1107,151 @@ body {
 
 .error-fallback-message {
   color: var(--text-muted);
+}
+
+/* Reduced motion: no entrance slides, hover lifts or growing bars. The
+   spinner stops rotating and gently fades instead, while the step list shows
+   the progress. */
+@keyframes fade-pulse {
+  50% { opacity: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-up {
+    animation: none;
+  }
+
+  .dropzone-wrapper,
+  .gradient-btn {
+    transition: none;
+  }
+
+  .dropzone-wrapper:hover,
+  .gradient-btn:hover {
+    transform: none;
+  }
+
+  .score-bar-fill {
+    transition: none;
+  }
+
+  .spinner-ring {
+    border-color: var(--secondary);
+    animation: fade-pulse 2s ease-in-out infinite;
+  }
+}
+
+/* Print / save as PDF: the report on white paper. Buttons are left out,
+   cards keep their contents together on one page where they fit, and
+   background colours (score ring, bars, badges) are kept. */
+@media print {
+  :root {
+    --bg-color: var(--print-paper);
+    --surface-color: var(--print-paper);
+    --text-main: var(--print-ink);
+    --text-muted: var(--print-ink-muted);
+    --border-color: var(--print-rule);
+    --primary: var(--print-primary);
+    --primary-light: var(--print-primary);
+    --secondary: var(--print-secondary);
+    --success: var(--print-primary);
+    --warning: var(--print-warning);
+    --danger: var(--print-danger);
+  }
+
+  @page {
+    margin: 15mm;
+  }
+
+  /* About 10.5pt body text, a usual size for print; every size here is in
+     rem, so the whole report scales with it. */
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    min-height: 0;
+    background: var(--print-paper);
+    color: var(--print-ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .back-btn,
+  .report-actions,
+  .report-action-feedback {
+    display: none;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .report-print-brand {
+    margin-bottom: 2pt;
+    color: var(--print-ink-muted);
+    font-size: 0.85rem;
+  }
+
+  .dashboard-container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .animate-slide-up {
+    animation: none;
+  }
+
+  .dashboard-header {
+    margin-bottom: 12pt;
+  }
+
+  .dashboard-title {
+    font-size: 1.4rem;
+  }
+
+  /* Block layout breaks across pages more predictably than grid in every
+     browser; on paper the cards stack in one column anyway. */
+  .grid {
+    display: block;
+  }
+
+  .grid > * + * {
+    margin-top: 12pt;
+  }
+
+  .card {
+    height: auto;
+    border: 1px solid var(--print-rule);
+    border-radius: 8px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .card-title,
+  .keyword-group-title {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .score-circle {
+    background: conic-gradient(
+      var(--rating-color, var(--primary)) var(--score),
+      var(--print-rule) 0
+    );
+  }
+
+  .score-bar,
+  .metric-bar-bg {
+    background: var(--print-rule);
+  }
+
+  .badge {
+    border-color: var(--print-rule);
+  }
 }

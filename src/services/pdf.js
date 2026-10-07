@@ -42,6 +42,21 @@ export function preloadPdfReader() {
   });
 }
 
+// When the worker script fails to load, pdf.js falls back to running the
+// worker code on the page, which needs the same file, and rejects with
+// "Setting up fake worker failed: …" (pdf.js 6.4, PDFWorker). The file the
+// user chose was never read, so this is reported as the PDF reader not
+// loading. pdf.js keeps that failed fallback for the page's lifetime, so a
+// retry needs a reload, as PDF_LIB_LOAD's message says.
+const WORKER_SETUP_FAILURE_PREFIX = "Setting up fake worker failed";
+
+function isWorkerSetupFailure(err) {
+  return (
+    typeof err?.message === "string" &&
+    err.message.startsWith(WORKER_SETUP_FAILURE_PREFIX)
+  );
+}
+
 async function readPdfPages(loadingTask) {
   const pdf = await loadingTask.promise;
 
@@ -99,6 +114,10 @@ export async function extractPdfText(file) {
     if (err?.name === "PasswordException") {
       throw new AnalysisError("PASSWORD", { cause: err });
     }
+    if (isWorkerSetupFailure(err)) {
+      throw new AnalysisError("PDF_LIB_LOAD", { cause: err });
+    }
+    // InvalidPDFException and anything else pdf.js rejects with.
     throw new AnalysisError("PDF_PARSE", { cause: err });
   } finally {
     // Releases the pdf.js worker for this document on every path. After a
