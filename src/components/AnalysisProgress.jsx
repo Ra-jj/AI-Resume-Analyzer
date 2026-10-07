@@ -57,7 +57,7 @@ function AnalysisProgress({ stage }) {
               <span className="progress-step-marker" aria-hidden="true">
                 {state === "done" && <Check size={14} strokeWidth={3} />}
               </span>
-              <span className="progress-step-label">
+              <span>
                 {state === "done" && <span className="visually-hidden">Done: </span>}
                 {step.label}
               </span>
