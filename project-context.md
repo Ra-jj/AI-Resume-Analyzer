@@ -29,7 +29,7 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - `src/App.jsx` — thin: picks the upload or report screen
 - `src/hooks/useResumeAnalysis.js` — all upload-flow state and actions; `stage` ("reading" | "analyzing" | null) drives the progress steps, `loading = stage !== null`
 - `src/services/` — side effects: `pdf.js` (lazy pdf.js extraction), `analyze.js` (the only file that touches `puter`)
-- `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, AI-failure mapping, file checks, limits, resume checks, score blending, prompt building (`prompt.js`)
+- `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, AI-failure mapping, file checks, limits, resume checks, score blending + rating thresholds (`report.js`), prompt building (`prompt.js`), the ranked to-do list (`fixFirst.js`), and the fictional sample report built through the real pipeline (`sampleReport.js`; must never import services/)
 - Tests are colocated as `*.test.js` next to the module they cover
 - `src/components/` — UploadView, JobDescriptionInput, AnalysisProgress (+ `AnalysisStatus`, the single always-present `role="status"` line rendered by UploadView), DashboardView, ErrorBoundary
 - e2e helpers: use `loadingHeading(page)` / `analysisStatus(page)` (e2e/helpers/test.js) rather than `getByRole("status")` to detect loading
@@ -42,7 +42,9 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - Dark theme, emerald `--primary` / cyan `--secondary`; reuse the CSS variables, don't hardcode new colors.
 - Error/warning strings state what happened plus what the user can do. Never assert a cause that wasn't verified (no "because…", "this means…").
 - Every UI change must not cause horizontal overflow at 390px width (tests also check 360 and 320).
-- Focus: the report `<h1>` gets programmatic focus on open; "Analyze another resume" returns focus to the file input; nothing takes focus on first load.
+- Focus: the report `<h1>` gets programmatic focus on open; App owns `initialFocus` for the upload view — "Analyze another resume" and "Analyze your own resume" → file input, "Back to home" (from the sample) → "See a full sample report" button; nothing takes focus on first load.
+- Sample mode (`isSample` on DashboardView): banner is plain text, never a live region; it must never trigger pdf.js or Puter.
+- User-visible copy: no em/en dashes in check labels/details (unit-tested).
 - Respect `prefers-reduced-motion`; print layout uses the `--print-*` tokens in index.css.
 - Score ratings come only from `getScoreRating()` in lib/report.js.
 

@@ -584,6 +584,46 @@ body {
   margin-top: 3px;
 }
 
+/* Sample report: the label above the report, and the closing call to
+   action after it. */
+.sample-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 1rem;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--surface-color);
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.sample-banner svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--primary-light);
+}
+
+.sample-closing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.sample-closing-text {
+  color: var(--text-muted);
+}
+
+/* "See a full sample report" on the upload screen, under the upload
+   controls. */
+.sample-open-btn {
+  margin-top: 1.5rem;
+}
+
 .card {
   background: var(--surface-color);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -1184,7 +1224,8 @@ body {
 
   .back-btn,
   .report-actions,
-  .report-action-feedback {
+  .report-action-feedback,
+  .sample-closing {
     display: none;
   }
 

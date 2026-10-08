@@ -85,8 +85,8 @@ describe("runResumeChecks: realistic resumes", () => {
     const result = runChecks(WEAK_RESUME);
     expect(result.score).toBe(0);
     expect(result.checks.map((check) => check.detail)).toEqual([
-      "37 words — aim for 300–1,000",
-      "No measurable results found — aim for at least 3",
+      "37 words. Aim for 300 to 1,000.",
+      "No measurable results found. Aim for at least 3.",
       "No email address found",
       "No phone number found",
       "No LinkedIn, GitHub or portfolio link found",
@@ -110,7 +110,7 @@ describe("runResumeChecks: realistic resumes", () => {
   it("does not read years, date ranges, ZIP codes, ISO numbers or versions as a phone or results", () => {
     const checks = byId(runChecks(DATES_AND_NUMBERS_ONLY));
     expect(checks.phone.passed).toBe(false);
-    expect(checks["quantified-results"].detail).toBe("No measurable results found — aim for at least 3");
+    expect(checks["quantified-results"].detail).toBe("No measurable results found. Aim for at least 3.");
     expect(checks.sections.passed).toBe(true);
   });
 
@@ -128,8 +128,8 @@ describe("runResumeChecks: realistic resumes", () => {
 
 describe("runResumeChecks: empty and invalid input", () => {
   const EMPTY_DETAILS = [
-    "0 words — aim for 300–1,000",
-    "No measurable results found — aim for at least 3",
+    "0 words. Aim for 300 to 1,000.",
+    "No measurable results found. Aim for at least 3.",
     "No email address found",
     "No phone number found",
     "No LinkedIn, GitHub or portfolio link found",
@@ -154,17 +154,17 @@ describe("runResumeChecks: empty and invalid input", () => {
 
 describe("length check", () => {
   it.each([
-    [299, false, "299 words — aim for 300–1,000"],
+    [299, false, "299 words. Aim for 300 to 1,000."],
     [300, true, "300 words"],
     [1000, true, "1,000 words"],
-    [1001, false, "1,001 words — aim for 300–1,000"],
-    [1450, false, "1,450 words — aim for 300–1,000"],
+    [1001, false, "1,001 words. Aim for 300 to 1,000."],
+    [1450, false, "1,450 words. Aim for 300 to 1,000."],
   ])("%i words -> passed %s", (count, passed, detail) => {
     expect(checkOf(words(count), "length")).toMatchObject({ passed, detail });
   });
 
   it("says '1 word' in the singular", () => {
-    expect(checkOf("word", "length").detail).toBe("1 word — aim for 300–1,000");
+    expect(checkOf("word", "length").detail).toBe("1 word. Aim for 300 to 1,000.");
   });
 
   it("does not count bullet glyphs and dashes as words", () => {
@@ -193,7 +193,7 @@ describe("measurable results check", () => {
         ? "No measurable results found"
         : `${count} measurable ${count === 1 ? "result" : "results"} found`;
     expect(check.passed).toBe(count >= 3);
-    expect(check.detail).toBe(count >= 3 ? found : `${found} — aim for at least 3`);
+    expect(check.detail).toBe(count >= 3 ? found : `${found}. Aim for at least 3.`);
   });
 });
 
@@ -470,11 +470,22 @@ describe("known limitations (current behaviour)", () => {
 
   it("counts a ZIP code followed by a word as a measurable result", () => {
     expect(checkOf("CA 94107 open to relocation", "quantified-results").detail).toBe(
-      "1 measurable result found — aim for at least 3",
+      "1 measurable result found. Aim for at least 3.",
     );
   });
 
   it("counts CJK text without spaces as no words (it is one long token)", () => {
-    expect(checkOf("我".repeat(2000), "length").detail).toBe("0 words — aim for 300–1,000");
+    expect(checkOf("我".repeat(2000), "length").detail).toBe("0 words. Aim for 300 to 1,000.");
+  });
+});
+
+describe("check wording", () => {
+  it("uses no em or en dashes in any label or detail", () => {
+    const texts = [WEAK_RESUME, "", words(1450), words(299), `${words(400)} Cut costs 40%`];
+    const dashed = texts
+      .flatMap((text) => runChecks(text).checks)
+      .flatMap((check) => [check.label, check.detail])
+      .filter((value) => /[\u2013\u2014]/.test(value));
+    expect(dashed).toEqual([]);
   });
 });

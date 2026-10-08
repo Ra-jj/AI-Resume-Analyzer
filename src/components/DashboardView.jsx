@@ -49,12 +49,16 @@ const COPIED_MESSAGE_MS = 4000;
 const COPY_FAILED_MESSAGE =
   "Couldn't copy the summary. Select the report text and copy it manually.";
 
+// Put before the copied summary of the sample report, so pasted text can't
+// pass for a real analysis.
+const SAMPLE_SUMMARY_PREFIX = "Sample report (fictional resume)";
+
 /**
  * "Copy summary" and "Print or save as PDF", with the copy result shown under
  * them. The result line is a polite live region that is always in the page
  * (empty when idle), so each change is announced once.
  */
-function ReportActions({ results }) {
+function ReportActions({ results, isSample }) {
   // "idle", "copied" or "failed"
   const [copyStatus, setCopyStatus] = useState("idle");
   const clearCopiedTimerRef = useRef(null);
@@ -67,7 +71,10 @@ function ReportActions({ results }) {
       if (typeof navigator.clipboard?.writeText !== "function") {
         throw new Error("navigator.clipboard.writeText is not available");
       }
-      await navigator.clipboard.writeText(buildReportSummaryText(results));
+      const summaryText = buildReportSummaryText(results);
+      await navigator.clipboard.writeText(
+        isSample ? `${SAMPLE_SUMMARY_PREFIX}\n\n${summaryText}` : summaryText,
+      );
       setCopyStatus("copied");
       clearCopiedTimerRef.current = setTimeout(
         () => setCopyStatus("idle"),
@@ -119,7 +126,16 @@ function ReportActions({ results }) {
   );
 }
 
-function DashboardView({ results, wasTextTruncated, onBack }) {
+// isSample shows the built-in sample report: it is labelled as a sample,
+// "Back to home" replaces "Analyze another resume", and it ends with a
+// button (onStartOwn) for analyzing the visitor's own resume.
+function DashboardView({
+  results,
+  wasTextTruncated,
+  onBack,
+  isSample = false,
+  onStartOwn,
+}) {
   const headingRef = useRef(null);
 
   useEffect(() => {
@@ -161,17 +177,26 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
 
   return (
     <div className="dashboard-container animate-slide-up">
+      {/* Plain text, not a live region: the upload screen's status line is
+          the page's only one, and the heading below already says "Sample". */}
+      {isSample && (
+        <p className="sample-banner">
+          <Info size={16} aria-hidden="true" />
+          <span>Sample report: fictional resume</span>
+        </p>
+      )}
       <div className="dashboard-header">
         <button type="button" className="back-btn" onClick={onBack}>
-          <ArrowLeft size={18} aria-hidden="true" /> Analyze another resume
+          <ArrowLeft size={18} aria-hidden="true" />{" "}
+          {isSample ? "Back to home" : "Analyze another resume"}
         </button>
         {/* Printed above the title instead of the buttons. */}
         <p className="print-only report-print-brand">AI Resume Analyzer</p>
         <div className="dashboard-title-row">
           <h1 ref={headingRef} className="dashboard-title" tabIndex={-1}>
-            Analysis Report
+            {isSample ? "Sample analysis report" : "Analysis Report"}
           </h1>
-          <ReportActions results={results} />
+          <ReportActions results={results} isSample={isSample} />
         </div>
       </div>
 
@@ -493,6 +518,17 @@ function DashboardView({ results, wasTextTruncated, onBack }) {
           </div>
         )}
       </div>
+
+      {isSample && (
+        <div className="sample-closing">
+          <p className="sample-closing-text">
+            Upload a PDF to get this report for your resume.
+          </p>
+          <button type="button" className="gradient-btn" onClick={onStartOwn}>
+            Analyze your own resume
+          </button>
+        </div>
+      )}
     </div>
   );
 }

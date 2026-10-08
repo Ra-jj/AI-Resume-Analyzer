@@ -9,16 +9,19 @@ import JobDescriptionInput from "./JobDescriptionInput.jsx";
 // onUploadIntent runs when the user looks about to choose a file (a file is
 // dragged in, or the pointer or keyboard focus reaches the button), so the
 // PDF reader can start loading early. It must be safe to call repeatedly.
-// focusFileInputOnMount is true when the user has come back from a report
-// with "Analyze another resume": choosing the next file is what they asked
-// to do, so focus starts on the file input.
+// initialFocus is where focus goes when this screen appears: "file-input"
+// when the user has come back from a report or asked to analyze their own
+// resume (choosing a file is what they asked to do), "sample-button" when
+// they have left the sample report, and null on first load, when nothing
+// takes focus.
 function UploadView({
   loading,
   stage,
-  focusFileInputOnMount,
+  initialFocus,
   error,
   onFileSelected,
   onUploadIntent,
+  onOpenSample,
   jobDescription,
   onJobDescriptionChange,
   onJobDescriptionClear,
@@ -30,16 +33,18 @@ function UploadView({
   const dragDepthRef = useRef(0);
   const errorRef = useRef(null);
   const fileInputRef = useRef(null);
+  const sampleButtonRef = useRef(null);
   // A too-short job description is shown on the field itself; every other
   // error goes in the card under the dropzone.
   const jobDescriptionError = error?.code === "JD_TOO_SHORT" ? error : null;
   const generalError = jobDescriptionError ? null : error;
 
   useEffect(() => {
-    // In effect this runs once, on mount: the flag only turns true while a
-    // report is showing, so it doesn't change while this screen is mounted.
-    if (focusFileInputOnMount) fileInputRef.current?.focus();
-  }, [focusFileInputOnMount]);
+    // In effect this runs once, on mount: App only changes initialFocus
+    // while another screen is showing.
+    if (initialFocus === "file-input") fileInputRef.current?.focus();
+    if (initialFocus === "sample-button") sampleButtonRef.current?.focus();
+  }, [initialFocus]);
 
   useEffect(() => {
     // On phones the error card renders below the fold, under the dropzone.
@@ -185,6 +190,20 @@ function UploadView({
           />
           <p>{generalError.message}</p>
         </div>
+      )}
+
+      {/* After the upload controls, so Tab reaches the job description and
+          the file input first. Hidden while analyzing, like the controls.
+          It is not an upload intent: opening the sample never loads pdf.js. */}
+      {!loading && (
+        <button
+          ref={sampleButtonRef}
+          type="button"
+          className="report-action-btn sample-open-btn"
+          onClick={onOpenSample}
+        >
+          See a full sample report
+        </button>
       )}
     </div>
   );

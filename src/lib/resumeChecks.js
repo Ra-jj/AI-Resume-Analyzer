@@ -210,7 +210,7 @@ function checkLength(text) {
     passed,
     detail: passed
       ? wordLabel
-      : `${wordLabel} — aim for ${formatNumber(MIN_RESUME_WORDS)}–${formatNumber(MAX_RESUME_WORDS)}`,
+      : `${wordLabel}. Aim for ${formatNumber(MIN_RESUME_WORDS)} to ${formatNumber(MAX_RESUME_WORDS)}.`,
   };
 }
 
@@ -225,7 +225,7 @@ function checkQuantifiedResults(text) {
     id: "quantified-results",
     label: "Measurable results",
     passed,
-    detail: passed ? found : `${found} — aim for at least ${MIN_QUANTIFIED_RESULTS}`,
+    detail: passed ? found : `${found}. Aim for at least ${MIN_QUANTIFIED_RESULTS}.`,
   };
 }
 

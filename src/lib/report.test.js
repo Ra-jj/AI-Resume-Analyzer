@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   AI_SCORE_WEIGHT_PERCENT,
   CHECKS_SCORE_WEIGHT_PERCENT,
+  EXCELLENT_MIN_SCORE,
+  GOOD_MIN_SCORE,
   buildReport,
   combineScores,
   getScoreRating,
@@ -134,5 +136,19 @@ describe("getScoreRating", () => {
     [0, "Needs Improvement"],
   ])("rates %i as %s", (score, rating) => {
     expect(getScoreRating(score)).toBe(rating);
+  });
+});
+
+describe("rating thresholds", () => {
+  it("exports the lowest score of each rating", () => {
+    expect(EXCELLENT_MIN_SCORE).toBe(80);
+    expect(GOOD_MIN_SCORE).toBe(60);
+  });
+
+  it("are the boundaries getScoreRating uses", () => {
+    expect(getScoreRating(EXCELLENT_MIN_SCORE)).toBe("Excellent");
+    expect(getScoreRating(EXCELLENT_MIN_SCORE - 1)).toBe("Good");
+    expect(getScoreRating(GOOD_MIN_SCORE)).toBe("Good");
+    expect(getScoreRating(GOOD_MIN_SCORE - 1)).toBe("Needs Improvement");
   });
 });

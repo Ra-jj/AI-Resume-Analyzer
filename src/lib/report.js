@@ -15,8 +15,8 @@ function clampScore(score, name) {
 
 // Lowest overall score for each rating; anything below "Good" is "Needs
 // Improvement".
-const EXCELLENT_MIN_SCORE = 80;
-const GOOD_MIN_SCORE = 60;
+export const EXCELLENT_MIN_SCORE = 80;
+export const GOOD_MIN_SCORE = 60;
 
 /** The rating shown next to an overall score: "Excellent", "Good" or "Needs Improvement". */
 export function getScoreRating(score) {

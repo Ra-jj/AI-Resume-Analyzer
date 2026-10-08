@@ -48,10 +48,6 @@ export function useResumeAnalysis() {
   // `loading` only updates on the next render; this ref blocks a second file
   // that arrives before then (e.g. a double drop).
   const isProcessingRef = useRef(false);
-  // True once the user has left a report for the upload screen, which then
-  // moves focus to its file input. False on first load, so opening the app
-  // never moves focus.
-  const [hasReturnedFromReport, setHasReturnedFromReport] = useState(false);
 
   const processFile = async (file) => {
     if (!file || isProcessingRef.current) return;
@@ -105,8 +101,9 @@ export function useResumeAnalysis() {
 
   const clearJobDescription = () => setJobDescription("");
 
+  const clearError = () => setError(null);
+
   const resetToUpload = () => {
-    setHasReturnedFromReport(true);
     setView("upload");
     setResults(null);
     setWasTextTruncated(false);
@@ -117,7 +114,6 @@ export function useResumeAnalysis() {
     view,
     loading,
     stage,
-    hasReturnedFromReport,
     error,
     results,
     wasTextTruncated,
@@ -125,6 +121,7 @@ export function useResumeAnalysis() {
     jobDescription,
     processFile,
     resetToUpload,
+    clearError,
     setJobDescription,
     clearJobDescription,
     // Lets the upload screen start fetching pdf.js before a file is chosen.

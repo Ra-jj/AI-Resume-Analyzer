@@ -25,3 +25,6 @@ npm-debug.log*
 .idea/
 .DS_Store
 *.local
+
+# Design reference images (local only)
+design-refs/
