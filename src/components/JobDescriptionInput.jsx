@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { AlertTriangle, Plus } from "lucide-react";
+import { AlertTriangle, Paperclip } from "lucide-react";
 
 import { MAX_JOB_DESCRIPTION_CHARACTERS } from "../lib/limits.js";
 
@@ -64,7 +64,7 @@ function JobDescriptionInput({ value, error, onChange, onClear }) {
           className="jd-add-btn"
           onClick={handleOpen}
         >
-          <Plus size={16} aria-hidden="true" />
+          <Paperclip size={18} strokeWidth={2.5} aria-hidden="true" />
           Add a job description (optional)
         </button>
       </div>
@@ -105,7 +105,12 @@ function JobDescriptionInput({ value, error, onChange, onClear }) {
       />
       {error && (
         <p ref={errorRef} id={errorId} className="jd-error">
-          <AlertTriangle size={16} className="jd-error-icon" aria-hidden="true" />
+          <AlertTriangle
+            size={18}
+            strokeWidth={2.5}
+            className="jd-error-icon"
+            aria-hidden="true"
+          />
           <span>{error.message}</span>
         </p>
       )}

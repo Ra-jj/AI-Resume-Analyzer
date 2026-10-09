@@ -167,7 +167,7 @@ for (const width of [390, 360, 320]) {
 
       await expect(page.locator(".privacy-note")).toHaveText(PRIVACY_NOTE);
       await expect(page.locator(".privacy-note")).toBeVisible();
-      const uploadButton = page.locator("label.gradient-btn");
+      const uploadButton = page.locator("label.primary-btn");
       expect(await lineCountOf(uploadButton)).toBe(1);
       expectInside(
         await uploadButton.boundingBox(),
@@ -246,14 +246,15 @@ for (const { title, contextOptions, interact, expectedBackground } of [
     title: "with a mouse, hovering highlights a report button",
     contextOptions: {},
     interact: (button) => button.hover(),
-    // --border-glow
-    expectedBackground: "rgba(16, 185, 129, 0.15)",
+    // --secondary-hover
+    expectedBackground: "rgb(233, 235, 240)",
   },
   {
     title: "on a touch screen, a tapped report button isn't left highlighted",
     contextOptions: { hasTouch: true, isMobile: true },
     interact: (button) => button.tap(),
-    expectedBackground: "rgba(0, 0, 0, 0)",
+    // --paper, the secondary button's own fill
+    expectedBackground: "rgb(245, 246, 248)",
   },
 ]) {
   test.describe(title, () => {
@@ -274,7 +275,7 @@ for (const { title, contextOptions, interact, expectedBackground } of [
 
       await interact(copyButton);
 
-      // The background transition takes 0.2s.
+      // The background transition takes 0.12s.
       await expect
         .poll(() => copyButton.evaluate((element) => getComputedStyle(element).backgroundColor))
         .toBe(expectedBackground);

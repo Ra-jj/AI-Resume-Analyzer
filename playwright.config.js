@@ -7,8 +7,8 @@ const PORT = 4317;
 const BASE_URL = `http://localhost:${PORT}`;
 
 // End-to-end tests run against the production build, served by
-// `vite preview`. Puter and Google Fonts are stubbed in every test
-// (e2e/helpers/), so no test reaches the network.
+// `vite preview`. Puter is stubbed and every other external host is blocked
+// in every test (e2e/helpers/), so no test reaches the network.
 export default defineConfig({
   testDir: "e2e",
   testMatch: "**/*.spec.js",

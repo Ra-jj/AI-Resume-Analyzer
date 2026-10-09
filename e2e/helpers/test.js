@@ -21,17 +21,14 @@ function isExternalHttpUrl(url) {
 
 /**
  * The Playwright `test` with a `page` that cannot reach the network: every
- * request to another host is aborted, and the Google Fonts stylesheet is
- * answered with an empty one. Puter is therefore blocked unless a test calls
+ * request to another host is aborted. (The fonts are served by the app
+ * itself, from public/fonts.) Puter is therefore blocked unless a test calls
  * stubPuter() (helpers/puter.js), whose route is registered later and so
  * takes precedence: Playwright runs matching routes newest first.
  */
 export const test = base.extend({
   page: async ({ page }, provide) => {
     await page.route(isExternalHttpUrl, (route) => route.abort("blockedbyclient"));
-    await page.route("https://fonts.googleapis.com/**", (route) =>
-      route.fulfill({ status: 200, contentType: "text/css", body: "" }),
-    );
     await provide(page);
   },
 });

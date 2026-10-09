@@ -12,8 +12,8 @@ import {
 } from "./helpers/test.js";
 import { releaseHeldReply, replies, stubPuter } from "./helpers/puter.js";
 
-// --primary-light, the colour of every keyboard focus ring.
-const FOCUS_RING = { style: "solid", width: "2px", color: "rgb(52, 211, 153)" };
+// --ink, 3px: every keyboard focus ring on paper.
+const FOCUS_RING = { style: "solid", width: "3px", color: "rgb(20, 22, 37)" };
 const NO_RING = { style: "none" };
 
 const STEP_LABELS = ["Reading your PDF", "Analyzing with AI", "Building your report"];
@@ -217,7 +217,7 @@ test.describe("focus", () => {
     // Mouse: focus moves, without a ring.
     await page.getByRole("button", { name: "Analyze another resume" }).click();
     await expect(fileInput(page)).toBeFocused();
-    expect(await outlineOf(page.locator("label.gradient-btn"))).toEqual(NO_RING);
+    expect(await outlineOf(page.locator("label.primary-btn"))).toEqual(NO_RING);
 
     // Keyboard: focus moves, with the ring on the button around the input.
     await chooseFixture(page, "resume.pdf");
@@ -226,7 +226,7 @@ test.describe("focus", () => {
     await expect(page.getByRole("button", { name: "Analyze another resume" })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(fileInput(page)).toBeFocused();
-    expect(await outlineOf(page.locator("label.gradient-btn"))).toEqual(FOCUS_RING);
+    expect(await outlineOf(page.locator("label.primary-btn"))).toEqual(FOCUS_RING);
   });
 
   test("after Analyze another resume, typing in the job description keeps focus there", async ({ page }) => {
@@ -335,45 +335,64 @@ test.describe("reduced motion", () => {
   const transformOf = (locator) =>
     locator.evaluate((element) => getComputedStyle(element).transform);
 
-  /**
-   * Hovers the element and checks its transform once any transition has had
-   * time to finish. "none" is checked after the 0.3s hover transitions would
-   * have ended, so a lift that is merely slow can't pass for no lift.
-   */
-  async function expectTransformWhileHovered(page, locator, expectedTransform) {
-    await locator.hover();
-    if (expectedTransform === "none") {
-      await page.waitForTimeout(500);
-      expect(await transformOf(locator)).toBe("none");
-    } else {
-      await expect.poll(() => transformOf(locator)).toBe(expectedTransform);
-    }
-  }
-
   const animationOf = (locator) =>
     locator.evaluate((element) => getComputedStyle(element).animationName);
+
+  const transitionDurationOf = (locator) =>
+    locator.evaluate((element) => getComputedStyle(element).transitionDuration);
+
+  /**
+   * Hovers the element and checks its transform after the 0.3s an old hover
+   * lift would have taken: nothing on the page lifts or grows on hover.
+   */
+  async function expectNoTransformWhileHovered(page, locator) {
+    await locator.hover();
+    await page.waitForTimeout(500);
+    expect(await transformOf(locator)).toBe("none");
+  }
+
+  /**
+   * The element's transform and shadow while the mouse button is held on
+   * it, once the 0.12s press transition has finished. The button is
+   * released elsewhere, so no click (and no file chooser) follows.
+   */
+  async function pressedStyleOf(page, locator) {
+    const box = await locator.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(300);
+    const style = await locator.evaluate((element) => {
+      const computed = getComputedStyle(element);
+      return { transform: computed.transform, boxShadow: computed.boxShadow };
+    });
+    await page.mouse.move(2, 2);
+    await page.mouse.up();
+    return style;
+  }
+
+  // Pressed: the shadow drops from 3px to 1px either way; only without
+  // reduced motion does the button also move into it.
+  const PRESSED_SHADOW = "rgb(20, 22, 37) 1px 1px 0px 0px";
 
   for (const { reducedMotion, expected } of [
     {
       reducedMotion: "no-preference",
       expected: {
-        dropzoneHover: "matrix(1, 0, 0, 1, 0, -5)",
-        buttonHover: "matrix(1.02, 0, 0, 1.02, 0, 0)",
-        loader: "slide-up",
-        spinner: "spin",
-        dashboard: "slide-up",
-        scoreBarTransition: "1s",
+        pressedTransform: "matrix(1, 0, 0, 1, 2, 2)",
+        jobDescriptionPanel: "jd-panel-in",
+        dropzoneTransition: "0.15s, 0.15s",
+        stroke: "highlighter-sweep",
+        stepMarkerTransition: "0.2s, 0.2s, 0.2s",
       },
     },
     {
       reducedMotion: "reduce",
       expected: {
-        dropzoneHover: "none",
-        buttonHover: "none",
-        loader: "none",
-        spinner: "fade-pulse",
-        dashboard: "none",
-        scoreBarTransition: "0s",
+        pressedTransform: "none",
+        jobDescriptionPanel: "none",
+        dropzoneTransition: "0s",
+        stroke: "fade-pulse",
+        stepMarkerTransition: "0s",
       },
     },
   ]) {
@@ -382,35 +401,42 @@ test.describe("reduced motion", () => {
       await stubPuter(page, [replies.heldAnalysis()]);
       await page.goto("/");
 
-      await expectTransformWhileHovered(
-        page,
-        page.locator(".dropzone-wrapper"),
-        expected.dropzoneHover,
-      );
-      await expectTransformWhileHovered(
-        page,
-        page.locator("label.gradient-btn"),
-        expected.buttonHover,
-      );
+      const dropzone = page.locator(".dropzone-wrapper");
+      const uploadButton = page.locator("label.primary-btn");
+      await expectNoTransformWhileHovered(page, dropzone);
+      await expectNoTransformWhileHovered(page, uploadButton);
+      expect(await transitionDurationOf(dropzone)).toBe(expected.dropzoneTransition);
+      expect(await pressedStyleOf(page, uploadButton)).toEqual({
+        transform: expected.pressedTransform,
+        boxShadow: PRESSED_SHADOW,
+      });
+
+      await addJobDescriptionButton(page).click();
+      expect(await animationOf(page.locator(".jd-panel"))).toBe(expected.jobDescriptionPanel);
+      await page.getByRole("button", { name: "Clear job description" }).click();
 
       await chooseFixture(page, "resume.pdf");
-      await expect(page.locator(".loading-container")).toBeVisible();
-      expect(await animationOf(page.locator(".loading-container"))).toBe(expected.loader);
-      expect(await animationOf(page.locator(".spinner-ring"))).toBe(expected.spinner);
-      // The spinner never rotates under reduced motion.
+      // The loading sheet takes the dropzone's place without sliding in.
+      await expect(page.locator(".loading-sheet")).toBeVisible();
+      expect(await animationOf(page.locator(".loading-sheet"))).toBe("none");
+      const stroke = page.locator(".progress-stroke");
+      expect(await animationOf(stroke)).toBe(expected.stroke);
+      expect(
+        await transitionDurationOf(page.locator(".progress-step-marker").first()),
+      ).toBe(expected.stepMarkerTransition);
       if (reducedMotion === "reduce") {
+        // The stroke never sweeps under reduced motion: it only fades.
         await page.waitForTimeout(300);
-        expect(await transformOf(page.locator(".spinner-ring"))).toBe("none");
+        expect(await transformOf(stroke)).toBe("none");
+      } else {
+        await expect.poll(() => transformOf(stroke)).toMatch(/^matrix\(/);
       }
 
       await releaseHeldReply(page);
       await expect(dashboardHeading(page)).toBeVisible();
-      expect(await animationOf(page.locator(".dashboard-container"))).toBe(expected.dashboard);
-      expect(
-        await page
-          .locator(".score-bar-fill")
-          .evaluate((element) => getComputedStyle(element).transitionDuration),
-      ).toBe(expected.scoreBarTransition);
+      // No slide-in for the report and no growing score bar, either way.
+      expect(await animationOf(page.locator(".dashboard-container"))).toBe("none");
+      expect(await transitionDurationOf(page.locator(".score-bar-fill"))).toBe("0s");
     });
   }
 });

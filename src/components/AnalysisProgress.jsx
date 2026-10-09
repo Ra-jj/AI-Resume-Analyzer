@@ -1,5 +1,7 @@
 import { Check } from "lucide-react";
 
+import ReportMarks from "./home/ReportMarks.jsx";
+
 // The steps of one analysis, in order. "building" is never the current
 // stage: the report is built in the same task the AI's reply arrives, and
 // the dashboard replaces this screen at that moment. It is listed so the
@@ -35,36 +37,48 @@ export function AnalysisStatus({ stage }) {
 
 /**
  * Loading screen for an analysis in progress: the steps, with the current
- * one marked. `stage` is the current step's key from ANALYSIS_STEPS.
+ * one marked and a highlighter stroke running under it. It takes the upload
+ * sheet's place, at the same size, so the page doesn't move. `stage` is the
+ * current step's key from ANALYSIS_STEPS.
  */
 function AnalysisProgress({ stage }) {
   const currentIndex = Math.max(0, stepIndexOf(stage));
 
   return (
-    <div className="loading-container animate-slide-up">
-      <div className="spinner-ring" aria-hidden="true"></div>
-      <h2 className="loading-title">Analyzing Your Resume</h2>
-      <ol className="progress-steps">
-        {ANALYSIS_STEPS.map((step, index) => {
-          const state =
-            index < currentIndex ? "done" : index === currentIndex ? "current" : "upcoming";
-          return (
-            <li
-              key={step.stage}
-              className={`progress-step progress-step--${state}`}
-              aria-current={state === "current" ? "step" : undefined}
-            >
-              <span className="progress-step-marker" aria-hidden="true">
-                {state === "done" && <Check size={14} strokeWidth={3} />}
-              </span>
-              <span>
-                {state === "done" && <span className="visually-hidden">Done: </span>}
-                {step.label}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+    <div className="upload-sheet loading-sheet">
+      <div className="loading-main">
+        <h2 className="loading-title">Analyzing your resume</h2>
+        <ol className="progress-steps">
+          {ANALYSIS_STEPS.map((step, index) => {
+            const state =
+              index < currentIndex ? "done" : index === currentIndex ? "current" : "upcoming";
+            return (
+              <li
+                key={step.stage}
+                className={`progress-step progress-step--${state}`}
+                aria-current={state === "current" ? "step" : undefined}
+              >
+                <span className="progress-step-marker" aria-hidden="true">
+                  {state === "done" && <Check size={14} strokeWidth={2.5} />}
+                </span>
+                <span className="progress-step-label">
+                  {state === "done" && <span className="visually-hidden">Done: </span>}
+                  {step.label}
+                </span>
+                {state === "current" && (
+                  <span className="progress-track" aria-hidden="true">
+                    <span className="progress-stroke"></span>
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+        <p className="loading-note">
+          If a Puter sign-in window opens, finish signing in there to continue.
+        </p>
+      </div>
+      <ReportMarks />
     </div>
   );
 }

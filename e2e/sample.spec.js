@@ -181,8 +181,10 @@ for (const width of [390, 360, 320]) {
   });
 }
 
+// The report no longer slides in (the redesign removed section slide-ups),
+// so nothing animates on it with or without reduced motion.
 for (const { reducedMotion, expectedAnimations } of [
-  { reducedMotion: "no-preference", expectedAnimations: ["slide-up"] },
+  { reducedMotion: "no-preference", expectedAnimations: [] },
   { reducedMotion: "reduce", expectedAnimations: [] },
 ]) {
   test(`the sample report with prefers-reduced-motion: ${reducedMotion}`, async ({ page }) => {

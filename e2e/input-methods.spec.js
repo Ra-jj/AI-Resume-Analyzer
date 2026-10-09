@@ -143,7 +143,7 @@ test.describe("drag and drop", () => {
 
 test("Tab reaches the job description button, then the file input, with a visible focus ring", async ({ page }) => {
   await openUploadPage(page);
-  const uploadButton = page.locator("label.gradient-btn");
+  const uploadButton = page.locator("label.primary-btn");
   const outlineOf = (locator) =>
     locator.evaluate((element) => {
       const style = getComputedStyle(element);
@@ -152,7 +152,7 @@ test("Tab reaches the job description button, then the file input, with a visibl
 
   await page.keyboard.press("Tab");
   await expect(addJobDescriptionButton(page)).toBeFocused();
-  expect(await outlineOf(addJobDescriptionButton(page))).toEqual({ style: "solid", width: "2px" });
+  expect(await outlineOf(addJobDescriptionButton(page))).toEqual({ style: "solid", width: "3px" });
 
   expect((await outlineOf(uploadButton)).style).toBe("none");
   const pdfLibraryRequest = page.waitForRequest((request) => isPdfLibraryUrl(request.url()), {
@@ -161,7 +161,7 @@ test("Tab reaches the job description button, then the file input, with a visibl
   await page.keyboard.press("Tab");
   await expect(fileInput(page)).toBeFocused();
   // The input is visually hidden, so the ring is drawn on its label.
-  expect(await outlineOf(uploadButton)).toEqual({ style: "solid", width: "2px" });
+  expect(await outlineOf(uploadButton)).toEqual({ style: "solid", width: "3px" });
   // Keyboard focus on the button also starts loading pdf.js.
   await pdfLibraryRequest;
 });

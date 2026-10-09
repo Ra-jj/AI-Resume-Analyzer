@@ -160,7 +160,7 @@ test("Print or save as PDF opens the browser's print dialog", async ({ page }) =
   await expect.poll(() => page.evaluate(() => window.__printCalls)).toBe(1);
 });
 
-test("the print stylesheet shows only the report, dark on white", async ({ page }) => {
+test("the print stylesheet shows only the report, ink on white", async ({ page }) => {
   await openReport(page, makeAnalysis({ jobMatch: makeJobMatch() }), "long-resume.pdf");
 
   const cards = page.locator(".dashboard-container .card");
@@ -196,9 +196,10 @@ test("the print stylesheet shows only the report, dark on white", async ({ page 
   expect(colours).toEqual({
     body: "rgb(255, 255, 255)",
     card: "rgb(255, 255, 255)",
-    heading: "rgb(24, 24, 27)",
-    // --print-ink-muted: the screen's light grey would be faint on paper.
-    mutedText: "rgb(82, 82, 91)",
+    // --print-ink
+    heading: "rgb(20, 22, 37)",
+    // --print-ink-muted (graphite)
+    mutedText: "rgb(75, 81, 99)",
     scoreRingColourAdjust: "exact",
     scoreBarColourAdjust: "exact",
   });

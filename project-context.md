@@ -10,7 +10,7 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - Framework: React 19 + Vite 8
 - AI: Puter.js loaded from `https://js.puter.com/v2/` in `index.html` (global `puter`, `puter.ai.chat`). Keep Puter — no serverless backend (owner's decision).
 - PDF: `pdfjs-dist` 6.4 (must stay ≥6.2.108: GHSA-hq66-cqwq-w95j) with its minified worker imported via `pdf.worker.min.mjs?url`
-- Styling: plain CSS with custom properties in `src/index.css`; icons from `lucide-react`
+- Styling: plain CSS with custom properties in `src/index.css`; icons from `lucide-react` (stroke 2.5); fonts Anybody + Newsreader self-hosted (OFL)
 - Package manager: npm
 - Node: v24 locally
 
@@ -21,7 +21,7 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - Lint: `npm run lint`
 - Build: `npm run build`
 - Test: `npm test` (Vitest, `src/**/*.test.js`, node environment; `npm run test:watch` for watch mode).
-- E2E: `npm run test:e2e` (Playwright, Chromium only, `e2e/*.spec.js`; run `npx playwright install chromium` once). Builds and serves a fresh production build on port 4317 (never reuses a running server); Puter, Google Fonts and every other external host are blocked/stubbed (`e2e/helpers/`). Fixtures in `e2e/fixtures/`.
+- E2E: `npm run test:e2e` (Playwright, Chromium only, `e2e/*.spec.js`; run `npx playwright install chromium` once). Builds and serves a fresh production build on port 4317 (never reuses a running server); Puter and every other external host are blocked/stubbed (fonts are same-origin) (`e2e/helpers/`). Fixtures in `e2e/fixtures/`.
 - CI: `.github/workflows/ci.yml` runs `npm ci` → lint (`--max-warnings=0`) → `npm test` → build → Playwright install → `npm run test:e2e` on Node 22; uploads the Playwright report on failure.
 
 ## Structure
@@ -39,7 +39,7 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 
 ## Conventions
 
-- Dark theme, emerald `--primary` / cyan `--secondary`; reuse the CSS variables, don't hardcode new colors.
+- Design: approved "Bold + reviewed document" redesign — spec in `design-refs/design-plan.md` (local, gitignored). Light only: paper #F5F6F8, ink #141625, highlighter #FFE21A (the one hot accent; never on paper without a 2px ink border), graphite #4B5163; ratings #11693F/#8F4A00/#B3261E. Fonts self-hosted in `public/fonts/` (Anybody = display/numerals/labels, Newsreader = prose). Reuse the CSS variables, don't hardcode new colors. Focus ring 3px ink.
 - Error/warning strings state what happened plus what the user can do. Never assert a cause that wasn't verified (no "because…", "this means…").
 - Every UI change must not cause horizontal overflow at 390px width (tests also check 360 and 320).
 - Focus: the report `<h1>` gets programmatic focus on open; App owns `initialFocus` for the upload view — "Analyze another resume" and "Analyze your own resume" → file input, "Back to home" (from the sample) → "See a full sample report" button; nothing takes focus on first load.

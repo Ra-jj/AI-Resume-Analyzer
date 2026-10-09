@@ -176,7 +176,7 @@ function DashboardView({
   };
 
   return (
-    <div className="dashboard-container animate-slide-up">
+    <main className="dashboard-container">
       {/* Plain text, not a live region: the upload screen's status line is
           the page's only one, and the heading below already says "Sample". */}
       {isSample && (
@@ -524,12 +524,12 @@ function DashboardView({
           <p className="sample-closing-text">
             Upload a PDF to get this report for your resume.
           </p>
-          <button type="button" className="gradient-btn" onClick={onStartOwn}>
+          <button type="button" className="primary-btn" onClick={onStartOwn}>
             Analyze your own resume
           </button>
         </div>
       )}
-    </div>
+    </main>
   );
 }
 

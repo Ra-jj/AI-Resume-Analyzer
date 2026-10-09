@@ -30,19 +30,24 @@ class ErrorBoundary extends Component {
   }
 }
 
-/** Full-page card used as the visible fallback for an ErrorBoundary. */
+/** Full-page sheet used as the visible fallback for an ErrorBoundary. */
 export function ErrorFallback({ title, message, actionLabel, onAction }) {
   return (
-    <div className="error-fallback-container">
-      <div className="card error-fallback" role="alert">
-        <AlertTriangle size={28} color="var(--danger)" aria-hidden="true" />
+    <main className="error-fallback-container">
+      <div className="error-fallback" role="alert">
+        <AlertTriangle
+          size={32}
+          strokeWidth={2.5}
+          className="error-fallback-icon"
+          aria-hidden="true"
+        />
         <h2 className="error-fallback-title">{title}</h2>
         <p className="error-fallback-message">{message}</p>
-        <button type="button" className="gradient-btn" onClick={onAction}>
+        <button type="button" className="primary-btn" onClick={onAction}>
           {actionLabel}
         </button>
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, FileUp } from "lucide-react";
 
 import { isFileDrag } from "../lib/files.js";
 import { MAX_FILE_SIZE_MB, MAX_PAGES } from "../lib/limits.js";
 import AnalysisProgress, { AnalysisStatus } from "./AnalysisProgress.jsx";
 import JobDescriptionInput from "./JobDescriptionInput.jsx";
+import HowItWorks from "./home/HowItWorks.jsx";
+import PrivacySection from "./home/PrivacySection.jsx";
+import ReportMarks from "./home/ReportMarks.jsx";
+import SiteFooter from "./home/SiteFooter.jsx";
 
 // onUploadIntent runs when the user looks about to choose a file (a file is
 // dragged in, or the pointer or keyboard focus reaches the button), so the
@@ -35,7 +39,7 @@ function UploadView({
   const fileInputRef = useRef(null);
   const sampleButtonRef = useRef(null);
   // A too-short job description is shown on the field itself; every other
-  // error goes in the card under the dropzone.
+  // error goes in the slip under the upload sheet.
   const jobDescriptionError = error?.code === "JD_TOO_SHORT" ? error : null;
   const generalError = jobDescriptionError ? null : error;
 
@@ -47,7 +51,7 @@ function UploadView({
   }, [initialFocus]);
 
   useEffect(() => {
-    // On phones the error card renders below the fold, under the dropzone.
+    // On phones the error slip renders below the fold, under the sheet.
     // Scroll just far enough to show it so a rejected file isn't silent.
     if (generalError) errorRef.current?.scrollIntoView({ block: "nearest" });
   }, [generalError]);
@@ -94,118 +98,136 @@ function UploadView({
   };
 
   return (
-    <div className="upload-container">
-      <h1 className="glow-title">AI Resume Analyzer</h1>
-      <p className="upload-subtitle">
-        Upload your PDF resume and get instant AI feedback
-      </p>
+    <>
+      <header className="page-width site-header">
+        <p className="wordmark">AI Resume Analyzer</p>
+      </header>
 
-      {/* Hidden while analyzing: an edit then wouldn't reach the request
-          that is already running. */}
-      {!loading && (
-        <JobDescriptionInput
-          value={jobDescription}
-          error={jobDescriptionError}
-          onChange={onJobDescriptionChange}
-          onClear={onJobDescriptionClear}
-        />
-      )}
-
-      {/* Distinct keys stop React from reusing the spinner's nodes as the
-          dropzone, which would animate the spinner's cyan border into it. */}
-      {loading ? (
-        <AnalysisProgress key="loading" stage={stage} />
-      ) : (
-        <div
-          key="dropzone"
-          className={`dropzone-wrapper${isDragActive ? " is-drag-active" : ""}`}
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <div className="dropzone-inner">
-            <svg
-              className="doc-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"
-                fill="#E2E8F0"
-              />
-              <path d="M14 2V8H20" fill="#CBD5E1" />
-              <path
-                d="M8 13H16M8 17H16M8 9H10"
-                stroke="#94A3B8"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            <h2>Upload Your Resume</h2>
-            <p>
-              Drag a PDF here or choose a file. Up to {MAX_FILE_SIZE_MB}&nbsp;MB
-              and {MAX_PAGES}&nbsp;pages.
+      <main className="upload-container">
+        <div className="page-width home-hero">
+          <div className="home-intro">
+            {/* Two spans with a space between: the lines break where
+                written, and the heading's name still reads as one phrase. */}
+            <h1 className="home-title">
+              <span className="home-title-line">Your resume,</span>{" "}
+              <span className="home-title-line">reviewed.</span>
+            </h1>
+            <p className="upload-subtitle">
+              Upload a PDF of your resume and get a score out of 100 and a list
+              of what to fix first.
             </p>
 
-            <label
-              className="gradient-btn choose-file-btn"
-              onPointerEnter={onUploadIntent}
-              onFocus={onUploadIntent}
-            >
-              Choose PDF File
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="visually-hidden"
-                accept="application/pdf,.pdf"
-                onChange={handleInputChange}
-                disabled={loading}
+            {/* Hidden while analyzing: an edit then wouldn't reach the
+                request that is already running. */}
+            {!loading && (
+              <JobDescriptionInput
+                value={jobDescription}
+                error={jobDescriptionError}
+                onChange={onJobDescriptionChange}
+                onClear={onJobDescriptionClear}
               />
-            </label>
+            )}
+          </div>
+
+          <div className="home-upload">
+            {/* Distinct keys stop React from reusing the dropzone's nodes for
+                the loading sheet that replaces it. */}
+            {loading ? (
+              <AnalysisProgress key="loading" stage={stage} />
+            ) : (
+              <div
+                key="dropzone"
+                className={`upload-sheet dropzone-wrapper${isDragActive ? " is-drag-active" : ""}`}
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <div className="dropzone-inner">
+                  <FileUp
+                    size={40}
+                    strokeWidth={2.5}
+                    className="dropzone-icon"
+                    aria-hidden="true"
+                  />
+                  <h2>Upload your resume</h2>
+                  <p>
+                    Drag a PDF here or choose a file.{" "}
+                    <span className="dropzone-limits">
+                      Up to {MAX_FILE_SIZE_MB}&nbsp;MB and {MAX_PAGES}&nbsp;pages.
+                    </span>
+                  </p>
+
+                  <label
+                    className="primary-btn choose-file-btn"
+                    onPointerEnter={onUploadIntent}
+                    onFocus={onUploadIntent}
+                  >
+                    Choose PDF File
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="visually-hidden"
+                      accept="application/pdf,.pdf"
+                      onChange={handleInputChange}
+                      disabled={loading}
+                    />
+                  </label>
+                </div>
+                <ReportMarks />
+              </div>
+            )}
+
+            {/* Outside the condition above: the region stays in the page,
+                empty at rest, so the first step is announced too. */}
+            <AnalysisStatus stage={stage} />
+
+            {generalError && (
+              <div ref={errorRef} className="upload-error" role="alert">
+                <AlertTriangle
+                  size={20}
+                  strokeWidth={2.5}
+                  className="upload-error-icon"
+                  aria-hidden="true"
+                />
+                <p>{generalError.message}</p>
+              </div>
+            )}
+
+            {!loading && (
+              <p className="privacy-note">
+                Your resume&apos;s text (and the job description, if you add
+                one) is sent to an AI model through Puter.js to create your
+                report. This app doesn&apos;t store it.
+              </p>
+            )}
           </div>
         </div>
-      )}
 
-      {/* Outside the condition above: the region stays in the page,
-          empty at rest, so the first step is announced too. */}
-      <AnalysisStatus stage={stage} />
+        <HowItWorks />
 
-      {!loading && (
-        <p className="privacy-note">
-          Your resume&apos;s text (and the job description, if you add one) is
-          sent to an AI model through Puter.js to create your report. This app
-          doesn&apos;t store it.
-        </p>
-      )}
+        {/* After the upload controls, so Tab reaches the job description
+            and the file input first. Hidden while analyzing, like the
+            controls. It is not an upload intent: opening the sample never
+            loads pdf.js. */}
+        {!loading && (
+          <div className="page-width sample-section">
+            <button
+              ref={sampleButtonRef}
+              type="button"
+              className="report-action-btn sample-open-btn"
+              onClick={onOpenSample}
+            >
+              See a full sample report
+            </button>
+          </div>
+        )}
 
-      {generalError && (
-        <div ref={errorRef} className="card mt-8 upload-error" role="alert">
-          <AlertTriangle
-            size={18}
-            className="upload-error-icon"
-            aria-hidden="true"
-          />
-          <p>{generalError.message}</p>
-        </div>
-      )}
+        <PrivacySection />
+      </main>
 
-      {/* After the upload controls, so Tab reaches the job description and
-          the file input first. Hidden while analyzing, like the controls.
-          It is not an upload intent: opening the sample never loads pdf.js. */}
-      {!loading && (
-        <button
-          ref={sampleButtonRef}
-          type="button"
-          className="report-action-btn sample-open-btn"
-          onClick={onOpenSample}
-        >
-          See a full sample report
-        </button>
-      )}
-    </div>
+      <SiteFooter />
+    </>
   );
 }
 

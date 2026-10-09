@@ -1,40 +1,93 @@
-:root {
-  --bg-color: #09090b; /* Dark charcoal */
-  --surface-color: #18181b; /* Dark zinc */
-  
-  --border-color: rgba(16, 185, 129, 0.3);
-  --border-glow: rgba(16, 185, 129, 0.15);
-  
-  --primary: #10b981; /* Emerald green */
-  --primary-light: #34d399; /* Bright neon green */
-  --secondary: #0ea5e9; /* Electric cyan */
-  
-  --text-main: #f8fafc;
-  --text-muted: #a1a1aa;
-  
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+/* Fonts: self-hosted latin subsets from Google Fonts, under the SIL Open
+   Font License (licence texts in public/fonts). Anybody is variable in width
+   and weight, Newsreader in optical size and weight; only the ranges the
+   design uses were downloaded. The two files are preloaded in index.html. */
+@font-face {
+  font-family: "Anybody";
+  src: url("/fonts/anybody-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500 900;
+  font-stretch: 75% 150%;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
-  /* Status colours at 10% (tint) and 25% (border) */
-  --success-tint: rgba(16, 185, 129, 0.1);
-  --success-border: rgba(16, 185, 129, 0.25);
-  --warning-tint: rgba(245, 158, 11, 0.1);
-  --warning-border: rgba(245, 158, 11, 0.25);
-  --danger-tint: rgba(239, 68, 68, 0.1);
-  --danger-border: rgba(239, 68, 68, 0.25);
+@font-face {
+  font-family: "Newsreader";
+  src: url("/fonts/newsreader-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light;
+
+  /* Palette: one cool family, light theme only. Highlighter on paper is
+     only 1.2:1, so yellow never sits on paper without a 2px ink border. */
+  --paper: #F5F6F8;
+  --ink: #141625;
+  --highlighter: #FFE21A;
+  --graphite: #4B5163; /* secondary text */
+  --rule: #C8CCD5; /* 1px separators, bar tracks */
+  --ink-muted: #B4B9C8; /* secondary text on ink */
+
+  /* Ratings: status only (rating chip, error icon, failed checks). */
+  --rating-excellent: #11693F;
+  --rating-good: #8F4A00;
+  --rating-needs-improvement: #B3261E;
+
+  /* Derived from the palette */
+  --highlighter-pale: #FFF4B0; /* drag-active fill, job description toggle hover */
+  --highlighter-deep: #F2D300; /* primary button hover */
+  --error-slip: #F6D9D5;
+  --secondary-hover: #E9EBF0;
+
+  /* The report still uses these names until its redesign. */
+  --success: var(--rating-excellent);
+  --warning: var(--rating-good);
+  --danger: var(--rating-needs-improvement);
+
+  /* Type: Anybody for display, labels and numerals; Newsreader for prose. */
+  --font-display: "Anybody", "Arial Narrow", system-ui, sans-serif;
+  --font-text: "Newsreader", Georgia, serif;
+
+  /* Shape: frames 6px, controls and tags 4px, marks 2px, bands 0. Hard
+     ink shadows with no blur, only on the sheets and on buttons. */
+  --radius-frame: 6px;
+  --radius-control: 4px;
+  --radius-mark: 2px;
+  --border-ink: 2px solid var(--ink);
+  --shadow-sheet-offset: 8px;
+  --shadow-sheet: var(--shadow-sheet-offset) var(--shadow-sheet-offset) 0 var(--ink);
+  --shadow-button: 3px 3px 0 var(--ink);
+  --shadow-button-pressed: 1px 1px 0 var(--ink);
+
+  /* Keyboard focus: a 3px ring 3px outside the control. */
+  --focus-ring: 3px solid var(--ink);
+  --focus-ring-offset: 3px;
+
+  --page-width: 1180px;
+  --gutter: 24px;
 
   /* Print palette, used only by the print stylesheet at the end of this
-     file: dark ink on white paper, with darker accents that stay readable
-     on white. */
-  --print-paper: #ffffff;
-  --print-ink: #18181b;
-  --print-ink-muted: #52525b;
-  --print-rule: #d4d4d8;
-  --print-primary: #047857;
-  --print-secondary: #0369a1;
-  --print-warning: #b45309;
-  --print-danger: #b91c1c;
+     file: the same ink on white paper. */
+  --print-paper: #FFFFFF;
+  --print-ink: #141625;
+  --print-ink-muted: #4B5163;
+  --print-rule: #C8CCD5;
+}
+
+@media (max-width: 599px) {
+  :root {
+    --shadow-sheet-offset: 6px;
+    --gutter: 16px;
+  }
 }
 
 * {
@@ -50,137 +103,45 @@
 .mt-8 { margin-top: 2rem; }
 .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
 
-
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  min-height: 100vh;
-  line-height: 1.6;
+  min-height: 100dvh;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 1.125rem;
+  line-height: 1.55;
 }
 
-/* Upload Screen Styles */
-.upload-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 2rem;
-  text-align: center;
-}
-
-.glow-title {
-  font-size: 3.5rem;
-  font-weight: 700;
-  background: linear-gradient(to right, var(--primary-light), var(--primary));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  margin-bottom: 0.5rem;
-  letter-spacing: -1px;
-}
-
-.upload-subtitle {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  margin-bottom: 3rem;
-}
-
-.dropzone-wrapper {
-  background-color: var(--surface-color);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 0 40px var(--border-glow);
-  border-radius: 20px;
-  padding: 2rem;
-  width: 100%;
-  max-width: 600px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.dropzone-wrapper:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 50px rgba(6, 182, 212, 0.25);
-}
-
-.dropzone-inner {
-  border: 2px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 4rem 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-/* A file is being dragged over the dropzone. No transform here: moving the
-   box would slide its edge out from under a stationary pointer and make
-   dragleave/dragenter fire in a loop. */
-.dropzone-wrapper.is-drag-active {
-  border-color: var(--primary-light);
-  box-shadow: 0 0 0 1px var(--primary-light), 0 10px 50px var(--border-color);
-}
-
-.dropzone-wrapper.is-drag-active .dropzone-inner {
-  border-color: var(--primary-light);
-  background-color: var(--border-glow);
-}
-
-.doc-icon {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 1rem;
-  opacity: 0.9;
-}
-
-.dropzone-inner h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.dropzone-inner p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
-}
-
-.gradient-btn {
-  position: relative;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: white;
-  border: none;
-  padding: 14px 32px;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* The upload button is a <label>; keyboard focus lands on the visually
-   hidden file input inside it, so the ring is drawn on the label. Kept as
-   separate rules: an unsupported selector would void a whole selector list. */
-.gradient-btn:focus-visible {
-  outline: 2px solid var(--primary-light);
-  outline-offset: 3px;
-}
-
-.gradient-btn:has(:focus-visible) {
-  outline: 2px solid var(--primary-light);
-  outline-offset: 3px;
-}
-
-@supports not selector(:has(*)) {
-  .gradient-btn:focus-within {
-    outline: 2px solid var(--primary-light);
-    outline-offset: 3px;
+@media (max-width: 599px) {
+  body {
+    font-size: 1.0625rem;
   }
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* One focus ring for every control; the few exceptions follow below. */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* Hidden visually but still focusable and announced by screen readers */
@@ -197,44 +158,214 @@ body {
   border: 0;
 }
 
-/* Optional job description, between the subtitle and the dropzone */
-.jd-section {
+.page-width {
   width: 100%;
-  max-width: 600px;
-  margin-bottom: 1.5rem;
+  max-width: calc(var(--page-width) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Buttons. Primary: highlighter with an ink border and a hard shadow that
+   the button presses into. Secondary: the same on paper. */
+.primary-btn,
+.report-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: var(--border-ink);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  box-shadow: var(--shadow-button);
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease-out,
+    transform 120ms ease-out,
+    box-shadow 120ms ease-out;
+}
+
+.primary-btn {
+  min-height: 48px;
+  padding: 11px 22px;
+  background-color: var(--highlighter);
+  font-size: 1.0625rem;
+}
+
+.report-action-btn {
+  min-height: 44px;
+  padding: 8px 16px;
+  background-color: var(--paper);
+  font-size: 1rem;
+}
+
+/* Only where hovering is real: on touch screens a tap would otherwise leave
+   the button highlighted. */
+@media (hover: hover) {
+  .primary-btn:hover {
+    background-color: var(--highlighter-deep);
+  }
+
+  .report-action-btn:hover {
+    background-color: var(--secondary-hover);
+  }
+}
+
+.primary-btn:active,
+.report-action-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-button-pressed);
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-button);
+}
+
+/* The upload button is a <label>; keyboard focus lands on the visually
+   hidden file input inside it, so the ring is drawn on the label. Kept as
+   separate rules: an unsupported selector would void a whole selector list. */
+.primary-btn:has(:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@supports not selector(:has(*)) {
+  .primary-btn:focus-within {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+/* ---------- Home page ---------- */
+
+.site-header {
+  padding-top: 48px;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-stretch: 110%;
+  font-weight: 800;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+@media (max-width: 599px) {
+  .wordmark {
+    font-size: 1.125rem;
+  }
+}
+
+/* Hero: the headline, subtext and job description on the left, the upload
+   sheet on the right. One column below 1200px: narrower, the sheet's half
+   is too small for its controls beside the "In your report" column. */
+.home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  padding-top: 32px;
+}
+
+.home-intro,
+.home-upload {
+  min-width: 0;
+}
+
+/* Anybody at its narrowest width: at the widths the plan named (105-120)
+   "Your resume," is about 870px wide at this size, more than the column. */
+.home-title {
+  font-stretch: 75%;
+  font-weight: 850;
+  font-size: min(15vw, 3.25rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+.home-title-line {
+  display: block;
+}
+
+.upload-subtitle {
+  max-width: 40ch;
+  margin-top: 20px;
+  color: var(--graphite);
+  font-size: 1.1875rem;
+  line-height: 1.4;
+}
+
+@media (min-width: 600px) {
+  .home-title {
+    font-size: 4.5rem;
+  }
+
+  .upload-subtitle {
+    font-size: 1.375rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .home-hero {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+    column-gap: 56px;
+    align-items: start;
+    padding-top: 40px;
+  }
+
+  .home-title {
+    font-size: clamp(3.25rem, 1.5rem + 5vw, 6rem);
+  }
+
+  .upload-subtitle {
+    margin-top: 24px;
+  }
+}
+
+/* Optional job description, under the subtext */
+.jd-section {
+  margin-top: 28px;
 }
 
 .jd-add-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 9999px;
-  background: none;
-  color: var(--primary-light);
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 500;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 18px;
+  border: 2px dashed var(--ink);
+  border-radius: var(--radius-control);
+  background-color: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 150ms ease-out;
 }
 
-.jd-add-btn:hover {
-  background: var(--border-glow);
+.jd-add-btn svg {
+  flex-shrink: 0;
 }
 
-.jd-add-btn:focus-visible {
-  outline: 2px solid var(--primary-light);
-  outline-offset: 3px;
+@media (hover: hover) {
+  .jd-add-btn:hover {
+    background-color: var(--highlighter-pale);
+  }
+}
+
+@keyframes jd-panel-in {
+  from { opacity: 0; }
 }
 
 .jd-panel {
-  padding: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  background: var(--surface-color);
-  text-align: left;
+  animation: jd-panel-in 150ms ease-out;
 }
 
 .jd-header {
@@ -242,70 +373,67 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 0.75rem;
+  margin-bottom: 8px;
 }
 
 .jd-label {
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
 }
 
-/* The negative margin lines the text up with the textarea's right edge
-   while keeping a comfortable click target. */
+/* A text button. The negative margin lines its text up with the textarea's
+   right edge while keeping a comfortable click target. */
 .jd-clear-btn {
   flex-shrink: 0;
-  margin-right: -10px;
-  padding: 4px 10px;
+  min-height: 32px;
+  margin-right: -8px;
+  padding: 4px 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   background: none;
-  color: var(--text-muted);
-  font-family: inherit;
-  font-size: 0.9rem;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
   cursor: pointer;
-  transition: color 0.2s ease;
 }
 
-.jd-clear-btn:hover {
-  color: var(--text-main);
-}
-
-.jd-clear-btn:focus-visible {
-  outline: 2px solid var(--primary-light);
-  outline-offset: 2px;
+@media (hover: hover) {
+  .jd-clear-btn:hover {
+    text-decoration-thickness: 3px;
+  }
 }
 
 .jd-textarea {
   display: block;
   width: 100%;
-  min-height: 8rem;
+  min-height: 9rem;
   padding: 12px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  background: var(--bg-color);
-  color: var(--text-main);
-  font-family: inherit;
-  font-size: 0.95rem;
+  border: var(--border-ink);
+  border-radius: var(--radius-control);
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 1.0625rem;
   line-height: 1.5;
   resize: vertical;
-  transition: border-color 0.2s ease;
 }
 
 .jd-textarea::placeholder {
-  color: var(--text-muted);
-}
-
-/* One ring: the outline sits over the 1px border instead of beside it. */
-.jd-textarea:focus-visible {
-  outline: 2px solid var(--primary-light);
-  outline-offset: -1px;
+  color: var(--graphite);
+  opacity: 1;
 }
 
 .jd-textarea[aria-invalid="true"] {
-  border-color: var(--danger);
+  border-color: var(--rating-needs-improvement);
 }
 
 .jd-textarea[aria-invalid="true"]:focus-visible {
-  outline-color: var(--danger);
+  outline-color: var(--rating-needs-improvement);
 }
 
 /* "Too short" message, directly under the field it is about. */
@@ -313,19 +441,21 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin-top: 0.5rem;
-  color: var(--danger);
-  font-size: 0.9rem;
+  margin-top: 8px;
+  color: var(--rating-needs-improvement);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .jd-error span {
   min-width: 0;
 }
 
-/* Centre the 16px icon on the first line of text (line-height 1.6). */
+/* Centre the 18px icon on the first line of text. */
 .jd-error-icon {
   flex-shrink: 0;
-  margin-top: calc((1.6em - 16px) / 2);
+  margin-top: calc((1.5em - 18px) / 2);
 }
 
 .jd-footer {
@@ -333,9 +463,10 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 0.5rem;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+  margin-top: 8px;
+  color: var(--graphite);
+  font-size: 1rem;
+  line-height: 1.45;
 }
 
 .jd-footer p {
@@ -346,90 +477,606 @@ body {
 .jd-count {
   flex-shrink: 0;
   white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .jd-count--full {
-  color: var(--warning);
+  color: var(--rating-good);
 }
 
-/* Compound selector: .card is declared later in this file and would
-   otherwise override the border and height. */
-.card.upload-error {
-  scroll-margin-bottom: 2rem;
-  width: 100%;
-  max-width: 600px;
-  height: auto;
+/* The upload sheet and the loading sheet that replaces it: the same frame
+   and the same "In your report" column, so starting an analysis doesn't
+   move or resize anything. The margins keep the hard shadow inside the
+   column. */
+.upload-sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 13rem;
+  min-height: 20rem;
+  margin-right: var(--shadow-sheet-offset);
+  margin-bottom: var(--shadow-sheet-offset);
+  border: var(--border-ink);
+  border-radius: var(--radius-frame);
+  background-color: var(--paper);
+  box-shadow: var(--shadow-sheet);
+}
+
+/* A file is being dragged over the sheet: a pale highlighter fill and a
+   dashed outline drawn inside the frame. Nothing moves or changes size: a
+   moving drop target slides out from under a still pointer and makes
+   dragleave/dragenter fire in a loop. */
+.dropzone-wrapper {
+  outline: 2px dashed transparent;
+  outline-offset: -12px;
+  transition:
+    background-color 150ms ease-out,
+    outline-color 150ms ease-out;
+}
+
+.dropzone-wrapper.is-drag-active {
+  background-color: var(--highlighter-pale);
+  outline-color: var(--ink);
+}
+
+/* Forced colours paint the transparent resting outline in the text colour
+   and ignore the fill, so there the outline appears only while dragging. */
+@media (forced-colors: active) {
+  .dropzone-wrapper {
+    outline-style: none;
+  }
+
+  .dropzone-wrapper.is-drag-active {
+    outline: 2px dashed CanvasText;
+  }
+}
+
+.dropzone-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 32px 28px;
+}
+
+.dropzone-icon {
+  flex-shrink: 0;
+  color: var(--ink);
+}
+
+.dropzone-inner h2,
+.loading-title {
+  font-stretch: 90%;
+  font-weight: 800;
+  font-size: 1.625rem;
+}
+
+.dropzone-inner p {
+  font-size: 1.0625rem;
+  line-height: 1.45;
+}
+
+.dropzone-limits {
+  display: block;
+  color: var(--graphite);
+  font-size: 1rem;
+}
+
+/* The upload button's label stays on one line; the phone layout leaves it
+   room down to 320px. */
+.choose-file-btn {
+  margin-top: 8px;
+}
+
+/* "In your report", the sheet's margin column. */
+.report-marks {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 28px 22px;
+  border-left: var(--border-ink);
+}
+
+.report-marks-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.report-marks-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-stretch: 90%;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* The empty score box: the mark arrives with the report. */
+.report-marks-score {
+  margin-bottom: 6px;
+}
+
+.report-marks-score-box {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  height: 5.5rem;
+  padding: 6px 10px;
+  border: var(--border-ink);
+  border-radius: var(--radius-control);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+/* Under the sheet, before the privacy note: what went wrong with the file. */
+.upload-error {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  text-align: left;
-  border-color: var(--danger);
-  color: var(--danger);
+  margin-top: 16px;
+  margin-right: var(--shadow-sheet-offset);
+  padding: 14px 16px 14px 20px;
+  border: var(--border-ink);
+  border-radius: var(--radius-frame);
+  /* The 4px red bar on the left, then the slip's fill. */
+  background: linear-gradient(
+    90deg,
+    var(--rating-needs-improvement) 0 4px,
+    var(--error-slip) 4px
+  );
+  color: var(--ink);
+  font-size: 1.0625rem;
+  line-height: 1.5;
   overflow-wrap: break-word;
-}
-
-/* Centre the 18px icon on the first line of text (line-height 1.6). */
-.upload-error-icon {
-  flex-shrink: 0;
-  margin-top: calc((1.6em - 18px) / 2);
+  scroll-margin-bottom: 2rem;
 }
 
 .upload-error p {
   min-width: 0;
 }
 
-.gradient-btn:hover {
-  opacity: 0.9;
-  transform: scale(1.02);
+/* Centre the 20px icon on the first line of text. */
+.upload-error-icon {
+  flex-shrink: 0;
+  margin-top: calc((1.5em - 20px) / 2);
+  color: var(--rating-needs-improvement);
 }
 
-.gradient-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* The upload button's label stays on one line; the phone layout below
-   leaves it room down to 320px. */
-.choose-file-btn {
-  white-space: nowrap;
-}
-
-/* Under the dropzone: where the resume text goes. */
+/* Under the sheet: where the resume text goes. */
 .privacy-note {
   max-width: 34rem;
-  margin-top: 1.25rem;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+  margin-top: 16px;
+  color: var(--graphite);
+  font-size: 1rem;
   line-height: 1.5;
 }
 
-/* Phones: less padding around the dropzone, so "Choose PDF File" fits on
-   one line at 320px. */
-@media (max-width: 480px) {
-  .upload-container {
-    padding: 2rem 1rem;
+/* Loading sheet */
+.loading-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  min-width: 0;
+  padding: 32px 28px;
+}
+
+.progress-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.progress-step {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  color: var(--graphite);
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.progress-step--current {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.progress-step-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--rule);
+  border-radius: 50%;
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    color 200ms ease-out;
+}
+
+.progress-step--done .progress-step-marker {
+  border-color: var(--ink);
+  background-color: var(--ink);
+  color: var(--highlighter);
+}
+
+.progress-step--current .progress-step-marker {
+  border-color: var(--ink);
+}
+
+.progress-step--current .progress-step-marker::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--ink);
+}
+
+/* The highlighter stroke under the current step: an ink-framed track that
+   a yellow stroke sweeps across while the step runs. */
+.progress-track {
+  grid-column: 2;
+  display: block;
+  width: 100%;
+  max-width: 14rem;
+  height: 12px;
+  margin-top: 8px;
+  border: var(--border-ink);
+  border-radius: var(--radius-mark);
+  overflow: hidden;
+}
+
+@keyframes highlighter-sweep {
+  0% { transform: scaleX(0); opacity: 1; }
+  60% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+.progress-stroke {
+  display: block;
+  height: 100%;
+  background-color: var(--highlighter);
+  transform-origin: left center;
+  animation: highlighter-sweep 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.loading-note {
+  max-width: 36ch;
+  color: var(--graphite);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Phones: the "In your report" column moves under the upload controls,
+   behind a 2px ink rule. */
+@media (max-width: 599px) {
+  .upload-sheet {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
   }
 
-  .dropzone-wrapper {
-    padding: 1rem;
+  .dropzone-inner,
+  .loading-main {
+    padding: 24px 16px;
   }
 
-  .dropzone-inner {
-    padding: 2.5rem 1rem;
+  .dropzone-inner h2,
+  .loading-title {
+    font-size: 1.5rem;
   }
 
-  .gradient-btn {
-    padding: 14px 24px;
+  .report-marks {
+    gap: 10px;
+    padding: 16px;
+    border-left: 0;
+    border-top: var(--border-ink);
+  }
+
+  /* The empty score box on the left, the four parts of the report beside it. */
+  .report-marks-list {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    align-items: start;
+    gap: 6px 14px;
+  }
+
+  .report-marks-score {
+    grid-row: 1 / span 4;
+    margin-bottom: 0;
+  }
+
+  .report-marks-score-box {
+    height: 4.5rem;
+    font-size: 1.25rem;
+  }
+
+  .report-marks-list li:not(.report-marks-score) {
+    grid-column: 2;
+  }
+
+  .jd-add-btn {
+    width: 100%;
+  }
+
+  .choose-file-btn {
+    padding-inline: 20px;
   }
 }
 
-/* Dashboard Styles */
+/* "How it works": the ink band */
+.how-it-works {
+  margin-top: 64px;
+  padding-block: 56px;
+  background-color: var(--ink);
+  color: var(--paper);
+}
+
+.how-it-works-inner {
+  display: grid;
+  gap: 32px;
+}
+
+.section-title {
+  font-stretch: 110%;
+  font-weight: 800;
+  font-size: 1.875rem;
+  line-height: 1.05;
+}
+
+.how-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.how-step {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  align-items: start;
+  column-gap: 16px;
+}
+
+.how-step-number {
+  color: var(--highlighter);
+  font-family: var(--font-display);
+  font-stretch: 150%;
+  font-weight: 900;
+  font-size: 4rem;
+  line-height: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.how-step-title {
+  font-size: 1.1875rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.how-step-text p {
+  max-width: 54ch;
+  margin-top: 8px;
+  color: var(--ink-muted);
+}
+
+/* "See a full sample report" (a preview of the sample joins it later). */
+.sample-section {
+  padding-top: 56px;
+}
+
+/* "What happens to your resume" */
+.privacy-section {
+  padding-top: 56px;
+  padding-bottom: 72px;
+}
+
+.privacy-points {
+  margin-top: 24px;
+}
+
+.privacy-point {
+  display: grid;
+  gap: 4px;
+  padding-block: 18px;
+}
+
+.privacy-point + .privacy-point {
+  border-top: 1px solid var(--rule);
+}
+
+.privacy-point dt {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.privacy-point dd {
+  max-width: 68ch;
+}
+
+@media (max-width: 599px) {
+  .sample-open-btn {
+    width: 100%;
+  }
+}
+
+@media (min-width: 600px) {
+  .how-it-works {
+    margin-top: 96px;
+    padding-block: 88px;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+  }
+
+  .how-steps {
+    gap: 48px;
+  }
+
+  .how-step {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    column-gap: 32px;
+  }
+
+  .how-step-number {
+    font-size: 7rem;
+  }
+
+  .how-step-title {
+    font-size: 1.25rem;
+  }
+
+  .how-step-text p {
+    margin-top: 10px;
+  }
+
+  .sample-section {
+    padding-top: 72px;
+  }
+
+  .privacy-section {
+    padding-top: 72px;
+    padding-bottom: 96px;
+  }
+
+  .privacy-points {
+    margin-top: 32px;
+  }
+
+  .privacy-point {
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: 24px;
+    padding-block: 22px;
+  }
+}
+
+@media (min-width: 960px) {
+  .how-it-works-inner {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: 56px;
+  }
+}
+
+/* Footer */
+.site-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-block: 24px 40px;
+  border-top: var(--border-ink);
+  color: var(--graphite);
+  font-size: 1rem;
+}
+
+.site-footer-inner p {
+  min-width: 0;
+}
+
+.site-footer-link {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .site-footer-link:hover {
+    text-decoration-thickness: 3px;
+  }
+}
+
+/* Error boundary fallback: a centred sheet. */
+.error-fallback-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 32px var(--gutter);
+}
+
+.error-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 30rem;
+  margin-right: var(--shadow-sheet-offset);
+  padding: 36px 28px;
+  border: var(--border-ink);
+  border-radius: var(--radius-frame);
+  background-color: var(--paper);
+  box-shadow: var(--shadow-sheet);
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+.error-fallback-icon {
+  flex-shrink: 0;
+  color: var(--rating-needs-improvement);
+}
+
+.error-fallback-title {
+  font-stretch: 105%;
+  font-weight: 800;
+  font-size: 1.75rem;
+}
+
+.error-fallback-message {
+  max-width: 40ch;
+}
+
+.error-fallback .primary-btn {
+  margin-top: 8px;
+  white-space: normal;
+}
+
+/* Phones: room for "Analyze another resume" on one line at 320px. */
+@media (max-width: 599px) {
+  .error-fallback {
+    padding: 28px 14px;
+  }
+
+  .error-fallback-title {
+    font-size: 1.5rem;
+  }
+
+  .error-fallback .primary-btn {
+    padding-inline: 16px;
+    font-stretch: 90%;
+    font-size: 1rem;
+  }
+}
+
+/* ---------- Report ----------
+   Restyled only as far as the new palette and fonts need; its redesign is
+   a later step. */
 .dashboard-container {
-  max-width: 1200px;
+  display: block;
+  max-width: calc(var(--page-width) + 2 * var(--gutter));
   margin: 0 auto;
-  padding: 2rem;
+  padding: 40px var(--gutter) 64px;
 }
 
 /* The back button on its own line, then the title with the report actions
@@ -439,28 +1086,28 @@ body {
 }
 
 .back-btn {
-  background: none;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 2px;
-  margin-bottom: 0.75rem;
-  color: var(--text-muted);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
-  font-family: inherit;
+  min-height: 32px;
+  margin-bottom: 0.75rem;
+  padding: 4px 2px;
+  border: none;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-display);
   font-size: 1rem;
-  transition: color 0.2s;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.back-btn:hover {
-  color: var(--text-main);
-}
-
-.back-btn:focus-visible {
-  outline: 2px solid var(--primary-light);
-  outline-offset: 3px;
+@media (hover: hover) {
+  .back-btn:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
 }
 
 .dashboard-title-row {
@@ -472,8 +1119,8 @@ body {
 }
 
 .dashboard-title {
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-weight: 800;
+  font-size: 1.75rem;
 }
 
 /* Focus only reaches the title from script (tabIndex -1), when a report
@@ -485,38 +1132,7 @@ body {
 .report-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.report-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: none;
-  color: var(--text-main);
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-/* Only where hovering is real: on touch screens a tap would otherwise leave
-   the button highlighted. */
-@media (hover: hover) {
-  .report-action-btn:hover {
-    background: var(--border-glow);
-  }
-}
-
-.report-action-btn:focus-visible {
-  outline: 2px solid var(--primary-light);
-  outline-offset: 3px;
+  gap: 0.75rem;
 }
 
 /* "Summary copied" or the copy error, on its own line under the actions.
@@ -529,26 +1145,30 @@ body {
   justify-content: flex-end;
   gap: 6px;
   min-height: 1.6em;
-  margin-top: -0.25rem;
-  color: var(--success);
-  font-size: 0.85rem;
+  color: var(--rating-excellent);
+  font-size: 1rem;
+  font-weight: 500;
   text-align: right;
 }
 
 .report-action-feedback svg {
   flex-shrink: 0;
-  margin-top: calc((1.6em - 16px) / 2);
+  margin-top: calc((1.55em - 16px) / 2);
 }
 
 .report-action-feedback--error {
-  color: var(--danger);
+  color: var(--rating-needs-improvement);
 }
 
 /* Phones: the actions take the full width under the title. Side by side when
    both fit, otherwise one per row, each as wide as the screen. */
 @media (max-width: 480px) {
   .dashboard-container {
-    padding: 1.5rem 1rem;
+    padding: 1.5rem var(--gutter);
+  }
+
+  .dashboard-title {
+    font-size: 1.5rem;
   }
 
   .report-actions {
@@ -575,13 +1195,13 @@ body {
   align-items: flex-start;
   gap: 8px;
   margin-bottom: 1.5rem;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+  color: var(--graphite);
+  font-size: 1rem;
 }
 
 .truncation-notice svg {
   flex-shrink: 0;
-  margin-top: 3px;
+  margin-top: 5px;
 }
 
 /* Sample report: the label above the report, and the closing call to
@@ -592,17 +1212,18 @@ body {
   gap: 8px;
   margin-bottom: 1rem;
   padding: 10px 14px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--surface-color);
-  color: var(--text-main);
-  font-size: 0.9rem;
+  border: var(--border-ink);
+  border-radius: var(--radius-control);
+  background-color: var(--highlighter);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .sample-banner svg {
   flex-shrink: 0;
-  margin-top: 3px;
-  color: var(--primary-light);
+  margin-top: 2px;
 }
 
 .sample-closing {
@@ -610,30 +1231,24 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 2.5rem;
   text-align: center;
 }
 
 .sample-closing-text {
-  color: var(--text-muted);
-}
-
-/* "See a full sample report" on the upload screen, under the upload
-   controls. */
-.sample-open-btn {
-  margin-top: 1.5rem;
+  color: var(--graphite);
 }
 
 .card {
-  background: var(--surface-color);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 1.5rem;
   height: 100%;
+  min-width: 0;
+  padding: 1.5rem;
+  border: var(--border-ink);
+  border-radius: var(--radius-frame);
+  background-color: var(--paper);
   /* AI text can contain long unbroken tokens (URLs, run-together words).
      Let them wrap and let grid/flex items shrink, so the dashboard never
      scrolls sideways on narrow screens. */
-  min-width: 0;
   overflow-wrap: anywhere;
 }
 
@@ -641,15 +1256,15 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
   margin-bottom: 1rem;
-  color: var(--primary-light);
+  color: var(--ink);
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
-.card-title--success { color: var(--success); }
-.card-title--warning { color: var(--warning); }
-.card-title--secondary { color: var(--secondary); }
+.card-title svg {
+  flex-shrink: 0;
+}
 
 .grid {
   display: grid;
@@ -671,30 +1286,33 @@ body {
 
 .score-circle {
   position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
   width: 120px;
   height: 120px;
   border-radius: 50%;
   /* The ring follows the rating colour set by .score-panel--*. */
-  background: conic-gradient(var(--rating-color, var(--primary)) var(--score), rgba(255,255,255,0.05) 0);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  background: conic-gradient(var(--rating-color, var(--ink)) var(--score), var(--rule) 0);
 }
 
 .score-circle::before {
   content: "";
   position: absolute;
-  inset: 8px;
+  inset: 10px;
   border-radius: 50%;
-  background: var(--surface-color);
+  background-color: var(--paper);
 }
 
 .score-value {
   position: relative;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-stretch: 120%;
+  font-weight: 900;
   font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--text-main);
+  line-height: 1;
 }
 
 .score-panel {
@@ -704,30 +1322,25 @@ body {
   width: 100%;
 }
 
-/* One modifier per score band sets the colour shared by the rating badge
-   and the score bar; the tint and border are that colour at 10% and 25%. */
+/* One modifier per score band sets the colour shared by the rating chip,
+   the score ring and the score bar. */
 .score-panel--excellent {
-  --rating-color: var(--success);
-  --rating-tint: var(--success-tint);
-  --rating-border: var(--success-border);
+  --rating-color: var(--rating-excellent);
 }
 
 .score-panel--good {
-  --rating-color: var(--warning);
-  --rating-tint: var(--warning-tint);
-  --rating-border: var(--warning-border);
+  --rating-color: var(--rating-good);
 }
 
 .score-panel--needs-improvement {
-  --rating-color: var(--danger);
-  --rating-tint: var(--danger-tint);
-  --rating-border: var(--danger-border);
+  --rating-color: var(--rating-needs-improvement);
 }
 
 .score-label {
   margin-top: 1rem;
+  color: var(--graphite);
   font-size: 1.25rem;
-  color: var(--text-muted);
+  font-weight: 700;
   text-align: center;
 }
 
@@ -739,7 +1352,7 @@ body {
 .score-breakdown {
   width: 100%;
   margin-top: 0.25rem;
-  font-size: 0.95rem;
+  font-size: 1rem;
   container-type: inline-size;
 }
 
@@ -747,7 +1360,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(--text-muted);
+  color: var(--graphite);
   text-align: center;
 }
 
@@ -775,18 +1388,20 @@ body {
   }
 }
 
+/* The rating chip: the rating colour with paper text. */
 .score-badge {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 2rem;
-  padding: 6px 16px;
-  border: 1px solid var(--rating-border);
-  border-radius: 9999px;
-  background: var(--rating-tint);
-  color: var(--rating-color);
-  font-size: 0.95rem;
-  font-weight: 600;
+  margin-top: 1.5rem;
+  padding: 6px 14px;
+  border-radius: var(--radius-control);
+  background-color: var(--rating-color);
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-stretch: 110%;
+  font-weight: 800;
+  font-size: 1rem;
 }
 
 .score-bar {
@@ -794,8 +1409,8 @@ body {
   max-width: 800px;
   height: 14px;
   margin-top: 16px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-mark);
+  background-color: var(--rule);
   overflow: hidden;
 }
 
@@ -803,39 +1418,35 @@ body {
 .score-bar-fill {
   width: var(--value);
   height: 100%;
-  border-radius: 9999px;
-  background: var(--rating-color);
-  transition: width 1s ease-out;
+  background-color: var(--rating-color);
 }
 
 .score-note {
   margin-top: 12px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--graphite);
+  font-size: 1rem;
   text-align: center;
 }
 
 .summary-text {
-  color: var(--text-muted);
-  font-size: 1.05rem;
-  line-height: 1.7;
+  font-size: 1.125rem;
+  line-height: 1.6;
 }
 
 .role-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 12px;
   margin-top: 12px;
 }
 
 .role-chip {
-  padding: 8px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 9999px;
-  background: var(--border-glow);
-  color: var(--primary-light);
-  font-size: 0.95rem;
-  font-weight: 500;
+  padding: 6px 14px;
+  border: var(--border-ink);
+  border-radius: var(--radius-control);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .metric-grid {
@@ -845,8 +1456,8 @@ body {
 
 .metric-row {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
+  justify-content: space-between;
   margin-bottom: 4px;
 }
 
@@ -859,15 +1470,16 @@ body {
   flex-shrink: 0;
   margin-left: 8px;
   white-space: nowrap;
-  color: var(--primary-light);
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .metric-bar-bg {
-  background: rgba(255, 255, 255, 0.05);
   height: 8px;
-  border-radius: 4px;
   margin-top: 8px;
+  border-radius: var(--radius-mark);
+  background-color: var(--rule);
   overflow: hidden;
 }
 
@@ -875,16 +1487,14 @@ body {
 .metric-bar-fill {
   width: var(--value);
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
-  border-radius: 4px;
+  background-color: var(--ink);
 }
 
 .list-item {
   display: flex;
+  align-items: flex-start;
   gap: 12px;
   margin-bottom: 12px;
-  align-items: flex-start;
-  color: var(--text-muted);
   overflow-wrap: break-word;
   word-break: break-word;
 }
@@ -897,23 +1507,19 @@ body {
 /* Nudges an 18px icon down to sit on the first line of its text. */
 .list-item-icon {
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .checklist-item {
   align-items: center;
 }
 
-.checklist-item span {
-  color: var(--text-main);
+.checklist-item svg {
+  flex-shrink: 0;
 }
 
 .checklist-item--failed span {
-  color: var(--danger);
-}
-
-.ats-summary {
-  color: var(--text-muted);
+  color: var(--rating-needs-improvement);
 }
 
 /* Space before the checklist, only when one follows the summary. */
@@ -922,35 +1528,33 @@ body {
 }
 
 .insight-dot {
+  flex-shrink: 0;
   width: 6px;
   height: 6px;
-  margin: 8px;
-  border-radius: 50%;
-  background: var(--secondary);
-  flex-shrink: 0;
+  margin: 10px 6px;
+  background-color: var(--ink);
 }
 
 .badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
   margin: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-control);
+  background-color: var(--secondary-hover);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .badge--success {
-  background: var(--success-tint);
-  border-color: var(--success-border);
-  color: var(--success);
+  border: var(--border-ink);
+  background-color: var(--highlighter);
 }
 
 .badge--warning {
-  background: var(--warning-tint);
-  border-color: var(--warning-border);
-  color: var(--warning);
+  border: 2px dashed var(--ink);
+  background-color: var(--paper);
 }
 
 /* Job Match */
@@ -983,9 +1587,8 @@ body {
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-main);
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .keyword-group-title svg {
@@ -995,7 +1598,7 @@ body {
 /* Resume Checks: two columns of checks on wide screens, one on phones. */
 .resume-checks-summary {
   margin-bottom: 1.25rem;
-  color: var(--text-muted);
+  color: var(--graphite);
 }
 
 .resume-check-list {
@@ -1018,185 +1621,59 @@ body {
 .resume-check-text {
   display: flex;
   flex-direction: column;
-  min-width: 0;
   flex: 1;
+  min-width: 0;
 }
 
 .resume-check-label {
-  color: var(--text-main);
+  font-weight: 600;
 }
 
 .resume-check-detail {
-  font-size: 0.9rem;
+  color: var(--graphite);
+  font-size: 1rem;
 }
 
-/* Loaders */
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-slide-up {
-  animation: slide-up 0.5s ease-out forwards;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-top: 4rem;
-}
-
-.spinner-ring {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--secondary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1.5rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-/* The three analysis steps, left-aligned as a block in the centred loader. */
-.progress-steps {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  text-align: left;
-}
-
-.progress-step {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--text-muted);
-}
-
-.progress-step-marker {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-}
-
-.progress-step--done .progress-step-marker {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: var(--bg-color);
-}
-
-.progress-step--current {
-  color: var(--text-main);
-  font-weight: 600;
-}
-
-.progress-step--current .progress-step-marker {
-  border-color: var(--secondary);
-}
-
-.progress-step--current .progress-step-marker::after {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--secondary);
-}
-
-/* Error boundary fallback */
-.error-fallback-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 2rem;
-}
-
-.error-fallback {
-  width: 100%;
-  max-width: 480px;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  text-align: center;
-  border-color: var(--danger);
-  overflow-wrap: break-word;
-}
-
-.error-fallback-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.error-fallback-message {
-  color: var(--text-muted);
-}
-
-/* Reduced motion: no entrance slides, hover lifts or growing bars. The
-   spinner stops rotating and gently fades instead, while the step list shows
-   the progress. */
+/* Reduced motion: transitions become instant, a pressed button shows it
+   with its shadow only, and the highlighter stroke stops sweeping and fades
+   gently instead, while the step list shows the progress. */
 @keyframes fade-pulse {
   50% { opacity: 0.4; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-slide-up {
-    animation: none;
-  }
-
+  .primary-btn,
+  .report-action-btn,
+  .jd-add-btn,
   .dropzone-wrapper,
-  .gradient-btn {
+  .progress-step-marker {
     transition: none;
   }
 
-  .dropzone-wrapper:hover,
-  .gradient-btn:hover {
+  .primary-btn:active,
+  .report-action-btn:active {
     transform: none;
   }
 
-  .score-bar-fill {
-    transition: none;
+  .jd-panel {
+    animation: none;
   }
 
-  .spinner-ring {
-    border-color: var(--secondary);
+  .progress-stroke {
+    transform: none;
     animation: fade-pulse 2s ease-in-out infinite;
   }
 }
 
 /* Print / save as PDF: the report on white paper. Buttons are left out,
    cards keep their contents together on one page where they fit, and
-   background colours (score ring, bars, badges) are kept. */
+   background colours (score ring, bars, chips) are kept. */
 @media print {
   :root {
-    --bg-color: var(--print-paper);
-    --surface-color: var(--print-paper);
-    --text-main: var(--print-ink);
-    --text-muted: var(--print-ink-muted);
-    --border-color: var(--print-rule);
-    --primary: var(--print-primary);
-    --primary-light: var(--print-primary);
-    --secondary: var(--print-secondary);
-    --success: var(--print-primary);
-    --warning: var(--print-warning);
-    --danger: var(--print-danger);
+    --paper: var(--print-paper);
+    --ink: var(--print-ink);
+    --graphite: var(--print-ink-muted);
+    --rule: var(--print-rule);
   }
 
   @page {
@@ -1211,7 +1688,7 @@ body {
 
   body {
     min-height: 0;
-    background: var(--print-paper);
+    background-color: var(--print-paper);
     color: var(--print-ink);
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -1236,7 +1713,9 @@ body {
   .report-print-brand {
     margin-bottom: 2pt;
     color: var(--print-ink-muted);
+    font-family: var(--font-display);
     font-size: 0.85rem;
+    font-weight: 700;
   }
 
   .dashboard-container {
@@ -1244,16 +1723,12 @@ body {
     padding: 0;
   }
 
-  .animate-slide-up {
-    animation: none;
-  }
-
   .dashboard-header {
     margin-bottom: 12pt;
   }
 
   .dashboard-title {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
   }
 
   /* Block layout breaks across pages more predictably than grid in every
@@ -1269,7 +1744,6 @@ body {
   .card {
     height: auto;
     border: 1px solid var(--print-rule);
-    border-radius: 8px;
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -1278,21 +1752,5 @@ body {
   .keyword-group-title {
     break-after: avoid;
     page-break-after: avoid;
-  }
-
-  .score-circle {
-    background: conic-gradient(
-      var(--rating-color, var(--primary)) var(--score),
-      var(--print-rule) 0
-    );
-  }
-
-  .score-bar,
-  .metric-bar-bg {
-    background: var(--print-rule);
-  }
-
-  .badge {
-    border-color: var(--print-rule);
   }
 }
