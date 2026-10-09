@@ -76,8 +76,8 @@ test("analyzes a resume end to end, then returns to a clean upload view", async 
   await expect(page.locator(".score-badge")).toHaveText(rating);
   await expect(page.locator(".score-panel")).toHaveClass(RATING_CLASSES[rating]);
 
-  // Resume Checks card, computed in the browser from the extracted text.
-  const checksCard = page.locator(".card").filter({
+  // Resume checks block, computed in the browser from the extracted text.
+  const checksCard = page.locator(".report-block").filter({
     has: page.getByRole("heading", { name: "Resume Checks" }),
   });
   const checkItems = checksCard.getByRole("listitem");
@@ -87,8 +87,10 @@ test("analyzes a resume end to end, then returns to a clean upload view", async 
     new RegExp(`^\\d+ of ${checkCount} checks passed$`),
   );
 
-  // No job description was given, so there is no Job Match card.
+  // No job description was given, so there is no Job match section and no
+  // match percentage.
   await expect(page.getByRole("heading", { name: "Job Match" })).toHaveCount(0);
+  await expect(page.locator(".match-mark")).toHaveCount(0);
 
   // The AI's own content is shown.
   await expect(page.getByText(analysis.executiveSummary)).toBeVisible();
@@ -241,7 +243,7 @@ test("runs the resume checks on the full text of a long resume, not the AI's cop
 
   // Expected values for e2e/fixtures/long-resume.pdf: its full text is 2,566
   // words, over the length check's limit; the first 15,000 characters are not.
-  const checksCard = page.locator(".card").filter({
+  const checksCard = page.locator(".report-block").filter({
     has: page.getByRole("heading", { name: "Resume Checks" }),
   });
   await expect(checksCard.locator(".resume-checks-summary")).toHaveText("5 of 6 checks passed");

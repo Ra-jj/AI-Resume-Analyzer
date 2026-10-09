@@ -32,10 +32,9 @@ const JD_TOO_SHORT_MESSAGE = new AnalysisError("JD_TOO_SHORT").message;
 
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-function jobMatchCard(page) {
-  return page.locator(".card").filter({
-    has: page.getByRole("heading", { name: "Job Match" }),
-  });
+/** The report's "Job match" section, a region named by its heading. */
+function jobMatchSection(page) {
+  return page.getByRole("region", { name: "Job match" });
 }
 
 test("is collapsed by default, opens into a focused field with a counter, and Clear closes it", async ({ page }) => {
@@ -109,7 +108,7 @@ test("rejects a too-short job description on the field itself, without calling t
   expect(await getPuterCalls(page)).toHaveLength(1);
 });
 
-test("sends a valid job description and shows the Job Match card", async ({ page }) => {
+test("sends a valid job description and shows the match and the Job match section", async ({ page }) => {
   const jobMatch = makeJobMatch();
   await stubPuter(page, [replies.analysis(makeAnalysis({ jobMatch }))]);
   await page.goto("/");
@@ -127,15 +126,18 @@ test("sends a valid job description and shows the Job Match card", async ({ page
   const resumeText = resumeTextOf(messages);
   expect(messages).toEqual(buildAnalysisMessages(resumeText, preparedJobDescription));
 
-  const card = jobMatchCard(page);
-  await expect(card).toBeVisible();
-  await expect(card.locator(".metric-row")).toHaveText(/Match with this role\s*74%/);
-  await expect(card).toContainText(jobMatch.summary);
-  await expect(card.locator(".badge--success")).toHaveText(jobMatch.matchedKeywords);
-  await expect(card.locator(".badge--warning")).toHaveText(jobMatch.missingKeywords);
+  // The percentage is in the score block, as a paragraph; the section has
+  // the rest.
+  await expect(page.locator(".score-block .match-mark")).toHaveText(/^74%\s*Match with this role$/);
+  await expect(page.getByRole("heading", { name: /match with this role|74%/i })).toHaveCount(0);
+  const section = jobMatchSection(page);
+  await expect(section).toBeVisible();
+  await expect(section).toContainText(jobMatch.summary);
+  await expect(section.locator(".keyword--matched")).toHaveText(jobMatch.matchedKeywords);
+  await expect(section.locator(".keyword--missing")).toHaveText(jobMatch.missingKeywords);
 });
 
-test("shows the report without a Job Match card when the reply has no usable jobMatch", async ({ page }) => {
+test("shows the report without a match or Job match section when the reply has no usable jobMatch", async ({ page }) => {
   await stubPuter(page, [replies.analysis(makeAnalysis({ jobMatch: { matchScore: "n/a" } }))]);
   await page.goto("/");
   await addJobDescriptionButton(page).click();
@@ -144,7 +146,8 @@ test("shows the report without a Job Match card when the reply has no usable job
   await chooseFixture(page, "resume.pdf");
 
   await expect(dashboardHeading(page)).toBeVisible();
-  await expect(jobMatchCard(page)).toHaveCount(0);
+  await expect(jobMatchSection(page)).toHaveCount(0);
+  await expect(page.locator(".match-mark")).toHaveCount(0);
 });
 
 test("keeps the job description after Analyze another resume", async ({ page }) => {

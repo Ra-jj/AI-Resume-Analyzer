@@ -9,6 +9,7 @@ import {
   isPdfLibraryUrl,
   isPdfWorkerUrl,
   loadingHeading,
+  reportPrintStyles,
   test,
   uploadHeading,
 } from "./helpers/test.js";
@@ -164,6 +165,76 @@ test("the sample button is hidden while a resume is analyzed", async ({ page }) 
   await expect(sampleButton(page)).toBeVisible();
 });
 
+test("after the sample, a real report's Analyze another resume returns focus to the file input", async ({ page }) => {
+  await openHome(page);
+  await sampleButton(page).click();
+  await expect(sampleHeading(page)).toBeFocused();
+  await backToHomeButton(page).click();
+  await expect(sampleButton(page)).toBeFocused();
+
+  await chooseFixture(page, "resume.pdf");
+  await expect(dashboardHeading(page)).toBeFocused();
+  // A real report: nothing of the sample is left on it.
+  await expect(page.getByText(SAMPLE_BANNER)).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: /sample/i })).toHaveCount(0);
+  await expect(backToHomeButton(page)).toHaveCount(0);
+  await expect(startOwnButton(page)).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Analyze another resume" }).click();
+  await expect(uploadHeading(page)).toBeVisible();
+  await expect(fileInput(page)).toBeFocused();
+
+  // The sample still opens, and still returns to its own button.
+  await sampleButton(page).click();
+  await expect(sampleHeading(page)).toBeFocused();
+  await backToHomeButton(page).click();
+  await expect(sampleButton(page)).toBeFocused();
+});
+
+test("the sample prints with its label as text, and without its buttons or closing block", async ({ page }) => {
+  await openHome(page);
+  await sampleButton(page).click();
+  await expect(sampleHeading(page)).toBeFocused();
+
+  await page.emulateMedia({ media: "print" });
+
+  const banner = page.locator(".sample-banner");
+  await expect(banner).toBeVisible();
+  await expect(banner).toHaveText(SAMPLE_BANNER);
+  // On paper it is a line of text in the flow, not a sticky highlighter strip.
+  expect(
+    await banner.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { position: style.position, background: style.backgroundColor, color: style.color };
+    }),
+  ).toEqual({ position: "static", background: "rgba(0, 0, 0, 0)", color: "rgb(20, 22, 37)" });
+  await expect(page.locator(".report-print-brand")).toBeVisible();
+  await expect(sampleHeading(page)).toBeVisible();
+  for (const hidden of [
+    page.locator(".sample-closing"),
+    backToHomeButton(page),
+    startOwnButton(page),
+    page.getByRole("button", { name: "Copy summary" }),
+    page.getByRole("button", { name: "Print or save as PDF" }),
+  ]) {
+    await expect(hidden).toBeHidden();
+  }
+
+  const styles = await reportPrintStyles(page);
+  expect(styles.scoreBlock).toEqual({
+    highlight: "rgb(255, 226, 26)",
+    border: "2px solid rgb(20, 22, 37)",
+    colourAdjust: "exact",
+  });
+  expect(styles.fixFirst).toEqual({
+    background: "rgb(255, 255, 255)",
+    text: "rgb(20, 22, 37)",
+    number: "rgb(20, 22, 37)",
+    border: "2px solid rgb(20, 22, 37)",
+  });
+  expect(styles.shadows).toEqual([]);
+});
+
 for (const width of [390, 360, 320]) {
   test.describe(`sample report at ${width}px`, () => {
     test.use({ viewport: { width, height: 800 } });
@@ -181,10 +252,10 @@ for (const width of [390, 360, 320]) {
   });
 }
 
-// The report no longer slides in (the redesign removed section slide-ups),
-// so nothing animates on it with or without reduced motion.
+// The only motion on the report is the score block's: the highlighter
+// sweep and the score's stamp. Under reduced motion nothing animates.
 for (const { reducedMotion, expectedAnimations } of [
-  { reducedMotion: "no-preference", expectedAnimations: [] },
+  { reducedMotion: "no-preference", expectedAnimations: ["score-highlight", "score-stamp"] },
   { reducedMotion: "reduce", expectedAnimations: [] },
 ]) {
   test(`the sample report with prefers-reduced-motion: ${reducedMotion}`, async ({ page }) => {
@@ -197,7 +268,8 @@ for (const { reducedMotion, expectedAnimations } of [
       document
         .getAnimations()
         .filter((animation) => animation instanceof CSSAnimation)
-        .map((animation) => animation.animationName),
+        .map((animation) => animation.animationName)
+        .sort(),
     );
     expect(animationNames).toEqual(expectedAnimations);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);

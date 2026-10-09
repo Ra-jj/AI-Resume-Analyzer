@@ -8,6 +8,7 @@ import {
   dashboardHeading,
   expect,
   jobDescriptionField,
+  reportPrintStyles,
   test,
 } from "./helpers/test.js";
 import {
@@ -160,11 +161,14 @@ test("Print or save as PDF opens the browser's print dialog", async ({ page }) =
   await expect.poll(() => page.evaluate(() => window.__printCalls)).toBe(1);
 });
 
-test("the print stylesheet shows only the report, ink on white", async ({ page }) => {
-  await openReport(page, makeAnalysis({ jobMatch: makeJobMatch() }), "long-resume.pdf");
+// Ink, paper and highlighter as the print stylesheet draws them.
+const PRINT_INK = "rgb(20, 22, 37)";
+const PRINT_PAPER = "rgb(255, 255, 255)";
+const HIGHLIGHTER = "rgb(255, 226, 26)";
+const INK_BORDER = `2px solid ${PRINT_INK}`;
 
-  const cards = page.locator(".dashboard-container .card");
-  const cardCount = await cards.count();
+test("the print stylesheet shows only the report, ink on white, with the score block's colours kept", async ({ page }) => {
+  await openReport(page, makeAnalysis({ jobMatch: makeJobMatch() }), "long-resume.pdf");
   await expect(page.locator(".report-print-brand")).toBeHidden();
 
   await page.emulateMedia({ media: "print" });
@@ -179,40 +183,41 @@ test("the print stylesheet shows only the report, ink on white", async ({ page }
   // It qualifies what was analyzed, so it stays in the printed report.
   await expect(page.locator(".truncation-notice")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Job Match" })).toBeVisible();
+  await expect(page.locator(".fix-first")).toBeVisible();
 
-  const colours = await page.evaluate(() => {
-    const style = (selector) => getComputedStyle(document.querySelector(selector));
-    return {
-      body: style("body").backgroundColor,
-      card: style(".card").backgroundColor,
-      heading: style(".dashboard-title").color,
-      mutedText: style(".score-note").color,
-      // Browsers leave out background colours when printing unless told
-      // otherwise; the score ring and bars are drawn with them.
-      scoreRingColourAdjust: style(".score-circle").getPropertyValue("print-color-adjust"),
-      scoreBarColourAdjust: style(".score-bar-fill").getPropertyValue("print-color-adjust"),
-    };
-  });
-  expect(colours).toEqual({
-    body: "rgb(255, 255, 255)",
-    card: "rgb(255, 255, 255)",
-    // --print-ink
-    heading: "rgb(20, 22, 37)",
+  expect(await reportPrintStyles(page)).toEqual({
+    body: PRINT_PAPER,
+    sheet: PRINT_PAPER,
+    // One column on paper: no margin rule.
+    sheetMarginRule: "none",
+    heading: PRINT_INK,
     // --print-ink-muted (graphite)
     mutedText: "rgb(75, 81, 99)",
-    scoreRingColourAdjust: "exact",
-    scoreBarColourAdjust: "exact",
+    // Browsers leave out background colours when printing unless told
+    // otherwise; the score block keeps its highlighter, inside an ink border.
+    scoreBlock: { highlight: HIGHLIGHTER, border: INK_BORDER, colourAdjust: "exact" },
+    // --rating-excellent: the long resume's report (AI 84, checks 83) is 84.
+    activeBand: { background: "rgb(17, 105, 63)", colourAdjust: "exact" },
+    // The ink panel turns to paper with an ink frame.
+    fixFirst: { background: PRINT_PAPER, text: PRINT_INK, number: PRINT_INK, border: INK_BORDER },
+    matchedKeyword: { background: HIGHLIGHTER, border: INK_BORDER, colourAdjust: "exact" },
+    fixFlag: { background: HIGHLIGHTER, border: INK_BORDER, colourAdjust: "exact" },
+    shadows: [],
   });
 
-  expect(cardCount).toBeGreaterThan(5);
-  for (let index = 0; index < cardCount; index++) {
-    const card = cards.nth(index);
-    await expect(card).toBeVisible();
+  // Rows and subsections keep together on a page where they fit; whole
+  // sections may break.
+  const keptTogether = page.locator(".report-block, .marked-row, .fix-first-item");
+  const keptTogetherCount = await keptTogether.count();
+  expect(keptTogetherCount).toBeGreaterThan(20);
+  for (let index = 0; index < keptTogetherCount; index++) {
     expect(
-      await card.evaluate((element) => {
-        const style = getComputedStyle(element);
-        return { breakInside: style.breakInside, boxShadow: style.boxShadow };
-      }),
-    ).toEqual({ breakInside: "avoid", boxShadow: "none" });
+      await keptTogether.nth(index).evaluate((element) => getComputedStyle(element).breakInside),
+    ).toBe("avoid");
+  }
+  for (const breakInside of await page
+    .locator(".report-section")
+    .evaluateAll((sections) => sections.map((section) => getComputedStyle(section).breakInside))) {
+    expect(breakInside).toBe("auto");
   }
 });

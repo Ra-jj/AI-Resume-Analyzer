@@ -111,3 +111,52 @@ export async function expectNoHorizontalOverflow(page, expectedViewportWidth) {
   expect(innerWidth).toBe(expectedViewportWidth);
   expect(scrollWidth, "page is wider than the viewport").toBeLessThanOrEqual(innerWidth);
 }
+
+/**
+ * Colours and borders the print stylesheet gives the report, read after
+ * page.emulateMedia({ media: "print" }). Borders read as "2px solid rgb(…)".
+ */
+export function reportPrintStyles(page) {
+  return page.evaluate(() => {
+    const style = (selector, pseudoElement) =>
+      getComputedStyle(document.querySelector(selector), pseudoElement);
+    const border = (selector) => {
+      const computed = style(selector);
+      return `${computed.borderTopWidth} ${computed.borderTopStyle} ${computed.borderTopColor}`;
+    };
+    const filled = (selector) => ({
+      background: style(selector).backgroundColor,
+      border: border(selector),
+      colourAdjust: style(selector).getPropertyValue("print-color-adjust"),
+    });
+    return {
+      body: style("body").backgroundColor,
+      sheet: style(".report-sheet-inner").backgroundColor,
+      sheetMarginRule: style(".report-sheet-inner").backgroundImage,
+      heading: style(".dashboard-title").color,
+      mutedText: style(".score-note").color,
+      scoreBlock: {
+        highlight: style(".score-block", "::before").backgroundColor,
+        border: border(".score-block"),
+        colourAdjust: style(".score-block").getPropertyValue("print-color-adjust"),
+      },
+      activeBand: {
+        background: style(".score-scale-band--active").backgroundColor,
+        colourAdjust: style(".score-scale-band--active").getPropertyValue("print-color-adjust"),
+      },
+      fixFirst: {
+        background: style(".fix-first").backgroundColor,
+        text: style(".fix-first-item-title").color,
+        number: style(".fix-first-number").color,
+        border: border(".fix-first"),
+      },
+      matchedKeyword: document.querySelector(".keyword--matched")
+        ? filled(".keyword--matched")
+        : null,
+      fixFlag: document.querySelector(".fix-flag") ? filled(".fix-flag") : null,
+      shadows: [...document.querySelectorAll("body *")]
+        .map((element) => getComputedStyle(element).boxShadow)
+        .filter((shadow) => shadow !== "none"),
+    };
+  });
+}

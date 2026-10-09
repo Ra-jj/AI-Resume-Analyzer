@@ -23,9 +23,12 @@ const CHECK_TITLES = {
 };
 
 const hasText = (value) => typeof value === "string" && value.trim().length > 0;
+// Each title and detail is shown on one line of the list, so line breaks
+// and runs of whitespace inside it are collapsed to single spaces.
+const toSingleLine = (text) => text.replace(/\s+/g, " ").trim();
 
 function textItems(list) {
-  return Array.isArray(list) ? list.filter(hasText).map((item) => item.trim()) : [];
+  return Array.isArray(list) ? list.filter(hasText).map(toSingleLine) : [];
 }
 
 function failedChecksOf(report) {
@@ -40,7 +43,7 @@ function checkItem(check, title, id = `check-${check.id}`) {
     id,
     title,
     source: "check",
-    detail: hasText(check.detail) ? `Automated check: ${check.detail.trim()}` : null,
+    detail: hasText(check.detail) ? `Automated check: ${toSingleLine(check.detail)}` : null,
   };
 }
 
@@ -59,10 +62,25 @@ function unknownCheckItems(failedChecks) {
     .map((check, index) =>
       checkItem(
         check,
-        check.label.trim(),
+        toSingleLine(check.label),
         hasText(check.id) ? `check-${check.id.trim()}` : `check-other-${index}`,
       ),
     );
+}
+
+/**
+ * The same items, with a "-2", "-3", … suffix on any id already used by an
+ * earlier item, so every id can serve as a React key. Repeated or unknown
+ * check ids can otherwise produce the same id twice.
+ */
+function withUniqueIds(items) {
+  const usedIds = new Set();
+  return items.map((item) => {
+    let id = item.id;
+    for (let suffix = 2; usedIds.has(id); suffix += 1) id = `${item.id}-${suffix}`;
+    usedIds.add(id);
+    return id === item.id ? item : { ...item, id };
+  });
 }
 
 function jobMatchItems(jobMatch) {
@@ -85,7 +103,8 @@ function jobMatchItems(jobMatch) {
  * in its own order; then one item for the job description's missing
  * keywords; then the other failed checks, any check this file doesn't know
  * last. Passed checks and the ATS checklist are not included. The first
- * FIX_FIRST_COUNT items are the ones to fix first.
+ * FIX_FIRST_COUNT items are the ones to fix first. Every id is unique, and
+ * every title and detail is a single line.
  */
 export function buildFixFirstList(report) {
   if (report === null || typeof report !== "object") return [];
@@ -97,11 +116,11 @@ export function buildFixFirstList(report) {
     detail: null,
   }));
 
-  return [
+  return withUniqueIds([
     ...knownCheckItems(failedChecks, LEADING_CHECK_IDS),
     ...aiItems,
     ...jobMatchItems(report.jobMatch),
     ...knownCheckItems(failedChecks, TRAILING_CHECK_IDS),
     ...unknownCheckItems(failedChecks),
-  ];
+  ]);
 }

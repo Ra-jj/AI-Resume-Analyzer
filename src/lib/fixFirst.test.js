@@ -189,6 +189,87 @@ describe("buildFixFirstList", () => {
     ]);
   });
 
+  it("gives every item a unique id, even for repeated or colliding check ids", () => {
+    const items = buildFixFirstList({
+      mainImprovements: ["Lead with results"],
+      resumeChecks: [
+        check("email", false),
+        check("email", false, "second email detail"),
+        // Trimmed, this unknown id is the known "email" id.
+        check(" email ", false, "padded id", "Padded id"),
+        check("spelling", false, "3 typos", "Spelling"),
+        check("spelling", false, "4 typos", "Spelling again"),
+      ],
+    });
+
+    expect(items.map((item) => item.id)).toEqual([
+      "check-email",
+      "check-email-2",
+      "ai-0",
+      "check-email-3",
+      "check-spelling",
+      "check-spelling-2",
+    ]);
+    expect(new Set(items.map((item) => item.id)).size).toBe(items.length);
+    // Only the id changes: the item keeps its own title and detail.
+    expect(items[1]).toEqual({
+      id: "check-email-2",
+      title: "Add an email address",
+      source: "check",
+      detail: "Automated check: second email detail",
+    });
+  });
+
+  it("keeps ids unique when a check without an id gets the same id as a real one", () => {
+    const items = buildFixFirstList({
+      resumeChecks: [
+        // No id: "check-other-<index among unknown checks>", here check-other-0.
+        { passed: false, label: "No id", detail: "y" },
+        { id: "other-0", passed: false, label: "Literal other", detail: "x" },
+      ],
+    });
+    expect(items.map((item) => [item.id, item.title])).toEqual([
+      ["check-other-0", "No id"],
+      ["check-other-0-2", "Literal other"],
+    ]);
+  });
+
+  it("keeps ids unique when a suffixed id is also a real id", () => {
+    const items = buildFixFirstList({
+      resumeChecks: [
+        check("spelling", false, "a", "Spelling"),
+        check("spelling", false, "b", "Spelling"),
+        check("spelling-2", false, "c", "Spelling two"),
+      ],
+    });
+    expect(items.map((item) => item.id)).toEqual([
+      "check-spelling",
+      "check-spelling-2",
+      "check-spelling-2-2",
+    ]);
+  });
+
+  it("collapses line breaks and whitespace runs in titles and details to single spaces", () => {
+    const items = buildFixFirstList({
+      mainImprovements: ["Lead each bullet\nwith the\t\tresult,\r\n  then the method  "],
+      resumeChecks: [
+        check("quantified-results", false, "2 measurable\nresults found.\n\nAim for at least 3."),
+        check("spelling", false, "3 typos\tfound", "Spelling\nand grammar"),
+      ],
+      jobMatch: { missingKeywords: ["A/B\ntesting", "  Experiment   design "] },
+    });
+
+    expect(items.map((item) => [item.title, item.detail])).toEqual([
+      ["Lead each bullet with the result, then the method", null],
+      ["Add keywords the job description asks for", "Job description: A/B testing, Experiment design"],
+      ["Add measurable results", "Automated check: 2 measurable results found. Aim for at least 3."],
+      ["Spelling and grammar", "Automated check: 3 typos found"],
+    ]);
+    for (const item of items) {
+      expect(`${item.title} ${item.detail ?? ""}`).not.toMatch(/[\n\r\t]| {2}/);
+    }
+  });
+
   it("does not modify the report", () => {
     const snapshot = structuredClone(FULL_REPORT);
     buildFixFirstList(FULL_REPORT);

@@ -383,6 +383,8 @@ test.describe("reduced motion", () => {
         dropzoneTransition: "0.15s, 0.15s",
         stroke: "highlighter-sweep",
         stepMarkerTransition: "0.2s, 0.2s, 0.2s",
+        scoreHighlight: "score-highlight",
+        scoreStamp: "score-stamp",
       },
     },
     {
@@ -393,6 +395,8 @@ test.describe("reduced motion", () => {
         dropzoneTransition: "0s",
         stroke: "fade-pulse",
         stepMarkerTransition: "0s",
+        scoreHighlight: "none",
+        scoreStamp: "none",
       },
     },
   ]) {
@@ -434,9 +438,17 @@ test.describe("reduced motion", () => {
 
       await releaseHeldReply(page);
       await expect(dashboardHeading(page)).toBeVisible();
-      // No slide-in for the report and no growing score bar, either way.
+      // The report opens with the highlighter swept across the score block
+      // and the score stamped onto it; under reduced motion, neither.
+      expect(
+        await page
+          .locator(".score-block")
+          .evaluate((element) => getComputedStyle(element, "::before").animationName),
+      ).toBe(expected.scoreHighlight);
+      expect(await animationOf(page.locator(".score-value"))).toBe(expected.scoreStamp);
+      // Nothing else on the report slides or grows in.
       expect(await animationOf(page.locator(".dashboard-container"))).toBe("none");
-      expect(await transitionDurationOf(page.locator(".score-bar-fill"))).toBe("0s");
+      expect(await animationOf(page.locator(".verdict-frame"))).toBe("none");
     });
   }
 });

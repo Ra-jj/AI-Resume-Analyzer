@@ -31,11 +31,12 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - `src/services/` — side effects: `pdf.js` (lazy pdf.js extraction), `analyze.js` (the only file that touches `puter`)
 - `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, AI-failure mapping, file checks, limits, resume checks, score blending + rating thresholds (`report.js`), prompt building (`prompt.js`), the ranked to-do list (`fixFirst.js`), and the fictional sample report built through the real pipeline (`sampleReport.js`; must never import services/)
 - Tests are colocated as `*.test.js` next to the module they cover
+- `src/components/report/` — ReportHeader, VerdictBlock (score block + Fix first; `headingLevel` prop, no focusable elements — reused on the homepage in round 4), ScoreBlock, FixFirstList, ReportSheet, MarkedRow; DashboardView composes them
 - `src/components/` — UploadView, JobDescriptionInput, AnalysisProgress (+ `AnalysisStatus`, the single always-present `role="status"` line rendered by UploadView), DashboardView, ErrorBoundary
 - e2e helpers: use `loadingHeading(page)` / `analysisStatus(page)` (e2e/helpers/test.js) rather than `getByRole("status")` to detect loading
 - `vercel.json` — security headers (no script/connect CSP, no COOP/COEP: they would break Puter.js). `vite.config.js` reads the same headers into `preview.headers`, so e2e runs under them.
 - `docs/screenshots/` — README images (fictional data)
-- `src/index.css` — all styles and design tokens; no inline styles except data-driven CSS custom properties (`--score`, `--value`)
+- `src/index.css` — all styles and design tokens; no inline styles except CSS custom properties (`--score`, `--value` per report; `--band-from`, `--band-to`, `--at` derived from the rating-threshold constants)
 
 ## Conventions
 

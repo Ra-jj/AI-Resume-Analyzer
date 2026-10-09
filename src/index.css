@@ -37,7 +37,7 @@
   --rule: #C8CCD5; /* 1px separators, bar tracks */
   --ink-muted: #B4B9C8; /* secondary text on ink */
 
-  /* Ratings: status only (rating chip, error icon, failed checks). */
+  /* Ratings: status only (rating chip and scale, error icons and text). */
   --rating-excellent: #11693F;
   --rating-good: #8F4A00;
   --rating-needs-improvement: #B3261E;
@@ -47,11 +47,6 @@
   --highlighter-deep: #F2D300; /* primary button hover */
   --error-slip: #F6D9D5;
   --secondary-hover: #E9EBF0;
-
-  /* The report still uses these names until its redesign. */
-  --success: var(--rating-excellent);
-  --warning: var(--rating-good);
-  --danger: var(--rating-needs-improvement);
 
   /* Type: Anybody for display, labels and numerals; Newsreader for prose. */
   --font-display: "Anybody", "Arial Narrow", system-ui, sans-serif;
@@ -73,7 +68,11 @@
   --focus-ring-offset: 3px;
 
   --page-width: 1180px;
+  --report-width: 1120px;
   --gutter: 24px;
+
+  /* z-index scale: the sample report's sticky banner is the only layer. */
+  --z-sticky: 10;
 
   /* Print palette, used only by the print stylesheet at the end of this
      file: the same ink on white paper. */
@@ -95,13 +94,6 @@
   margin: 0;
   padding: 0;
 }
-
-/* Layout Utilities */
-.flex { display: flex; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.mt-8 { margin-top: 2rem; }
-.py-8 { padding-top: 2rem; padding-bottom: 2rem; }
 
 body {
   min-height: 100dvh;
@@ -1069,28 +1061,72 @@ textarea {
   }
 }
 
-/* ---------- Report ----------
-   Restyled only as far as the new palette and fonts need; its redesign is
-   a later step. */
-.dashboard-container {
-  display: block;
-  max-width: calc(var(--page-width) + 2 * var(--gutter));
-  margin: 0 auto;
-  padding: 40px var(--gutter) 64px;
+/* ---------- Report ---------- */
+
+/* Sample report: a highlighter strip held at the top of the screen while
+   the sample scrolls. Its text lines up with the report column. */
+.sample-banner {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px max(var(--gutter), calc((100% - var(--report-width)) / 2));
+  border-bottom: var(--border-ink);
+  background-color: var(--highlighter);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
 }
 
-/* The back button on its own line, then the title with the report actions
-   beside it. On narrow screens the actions wrap under the title. */
+.sample-banner svg {
+  flex-shrink: 0;
+  margin-top: calc((1.5em - 16px) / 2);
+}
+
+/* Keeps a focused element from scrolling in under the sample banner. */
+:root:has(.sample-banner) {
+  scroll-padding-top: 4rem;
+}
+
+/* One line down to 320px. */
+@media (max-width: 399px) {
+  .sample-banner {
+    font-stretch: 90%;
+  }
+}
+
+.report-page {
+  max-width: calc(var(--report-width) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 28px var(--gutter) 72px;
+}
+
+/* Phones and tablets: back, title, actions, then the copy result, one
+   under the other. From 960px the actions share the back button's row and
+   the copy result sits under them, beside the title. */
 .dashboard-header {
-  margin-bottom: 1.25rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "back"
+    "title"
+    "actions"
+    "feedback";
+  row-gap: 14px;
+  margin-bottom: 24px;
 }
 
 .back-btn {
+  grid-area: back;
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 32px;
-  margin-bottom: 0.75rem;
   padding: 4px 2px;
   border: none;
   border-radius: var(--radius-control);
@@ -1110,17 +1146,15 @@ textarea {
   }
 }
 
-.dashboard-title-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1.5rem;
-}
-
+/* Anybody at its narrowest on phones, so "Analysis report" stays on one
+   line at 320px. */
 .dashboard-title {
-  font-weight: 800;
-  font-size: 1.75rem;
+  grid-area: title;
+  font-stretch: 75%;
+  font-weight: 850;
+  font-size: 2.375rem;
+  line-height: 1;
+  letter-spacing: -0.01em;
 }
 
 /* Focus only reaches the title from script (tabIndex -1), when a report
@@ -1130,58 +1164,85 @@ textarea {
 }
 
 .report-actions {
+  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 12px;
 }
 
-/* "Summary copied" or the copy error, on its own line under the actions.
-   One line is always reserved, so the confirmation appearing and clearing
-   doesn't move the report. */
+/* "Summary copied" or the copy error, under the actions. Its line is
+   always reserved, so the confirmation appearing and clearing doesn't move
+   the report. */
 .report-action-feedback {
-  flex-basis: 100%;
+  grid-area: feedback;
   display: flex;
   align-items: flex-start;
-  justify-content: flex-end;
   gap: 6px;
-  min-height: 1.6em;
+  min-height: 1.5em;
   color: var(--rating-excellent);
   font-size: 1rem;
   font-weight: 500;
-  text-align: right;
+  line-height: 1.5;
 }
 
 .report-action-feedback svg {
   flex-shrink: 0;
-  margin-top: calc((1.55em - 16px) / 2);
+  margin-top: calc((1.5em - 16px) / 2);
 }
 
 .report-action-feedback--error {
   color: var(--rating-needs-improvement);
 }
 
-/* Phones: the actions take the full width under the title. Side by side when
-   both fit, otherwise one per row, each as wide as the screen. */
-@media (max-width: 480px) {
-  .dashboard-container {
-    padding: 1.5rem var(--gutter);
-  }
-
-  .dashboard-title {
-    font-size: 1.5rem;
-  }
-
-  .report-actions {
-    width: 100%;
+/* Phones: the buttons fill the width, side by side when both fit,
+   otherwise one per row. */
+@media (max-width: 599px) {
+  .report-page {
+    padding-top: 24px;
   }
 
   .report-action-btn {
     flex: 1 1 auto;
   }
+}
 
+@media (min-width: 600px) {
+  .dashboard-title {
+    font-stretch: 100%;
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 960px) {
+  .dashboard-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "back actions"
+      "title feedback";
+    column-gap: 32px;
+    row-gap: 10px;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .dashboard-title {
+    align-self: end;
+  }
+
+  /* contain: inline-size keeps a long error from widening the column; it
+     wraps under the buttons instead. */
   .report-action-feedback {
-    justify-content: flex-start;
-    text-align: left;
+    align-self: start;
+    justify-content: flex-end;
+    text-align: right;
+    contain: inline-size;
+  }
+}
+
+@media (min-width: 1200px) {
+  .dashboard-title {
+    font-stretch: 115%;
+    font-size: 3.5rem;
   }
 }
 
@@ -1194,136 +1255,91 @@ textarea {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 20px;
   color: var(--graphite);
   font-size: 1rem;
+  line-height: 1.5;
 }
 
 .truncation-notice svg {
   flex-shrink: 0;
-  margin-top: 5px;
+  margin-top: calc((1.5em - 16px) / 2);
 }
 
-/* Sample report: the label above the report, and the closing call to
-   action after it. */
-.sample-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 1rem;
-  padding: 10px 14px;
-  border: var(--border-ink);
-  border-radius: var(--radius-control);
-  background-color: var(--highlighter);
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 700;
+/* The verdict: the score block and the "Fix first" panel in one ink frame
+   with a hard shadow, kept inside the column by the margins. Side by side
+   when the frame is 60rem or wider, the score first otherwise. */
+.verdict {
+  container: verdict / inline-size;
+  margin-right: var(--shadow-sheet-offset);
+  margin-bottom: calc(var(--shadow-sheet-offset) + 32px);
 }
 
-.sample-banner svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.sample-closing {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 2.5rem;
-  text-align: center;
-}
-
-.sample-closing-text {
-  color: var(--graphite);
-}
-
-.card {
-  height: 100%;
-  min-width: 0;
-  padding: 1.5rem;
+/* overflow clips both panels to the frame's corners (4px inside a 6px
+   frame with a 2px border); the edge they share stays square. The ink
+   fill only shows in the anti-aliased corner pixels, where it meets the
+   border. */
+.verdict-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   border: var(--border-ink);
   border-radius: var(--radius-frame);
-  background-color: var(--paper);
-  /* AI text can contain long unbroken tokens (URLs, run-together words).
-     Let them wrap and let grid/flex items shrink, so the dashboard never
-     scrolls sideways on narrow screens. */
-  overflow-wrap: anywhere;
+  background-color: var(--ink);
+  box-shadow: var(--shadow-sheet);
+  overflow: hidden;
 }
 
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 1rem;
-  color: var(--ink);
-  font-size: 1.25rem;
-  font-weight: 700;
-}
+@container verdict (min-width: 60rem) {
+  .verdict-frame {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
 
-.card-title svg {
-  flex-shrink: 0;
-}
-
-.grid {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.grid-cols-12 {
-  grid-template-columns: repeat(12, 1fr);
-}
-
-.col-span-12 { grid-column: span 12; }
-.col-span-6 { grid-column: span 6; }
-
-@media (max-width: 768px) {
-  .col-span-6 {
-    grid-column: span 12;
+  /* Nothing to fix: the score takes the whole frame. */
+  .score-block:only-child {
+    grid-column: 1 / -1;
   }
 }
 
-.score-circle {
-  position: relative;
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  /* The ring follows the rating colour set by .score-panel--*. */
-  background: conic-gradient(var(--rating-color, var(--ink)) var(--score), var(--rule) 0);
+/* The score block. Its yellow is a highlighter layer under the text;
+   overflow keeps the score's stamp inside the block.
+
+   Signature motion when a report opens: the highlighter is swept across
+   the block from the left (0-280ms), then the score is stamped onto it
+   (180-600ms). Transform and opacity only; none under reduced motion. */
+@keyframes score-highlight {
+  from { transform: scaleX(0); }
 }
 
-.score-circle::before {
+@keyframes score-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.35) rotate(-6deg);
+  }
+}
+
+.score-block {
+  container: score / inline-size;
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  padding: 20px 20px 24px;
+  background-color: var(--paper);
+  color: var(--ink);
+  overflow: clip;
+}
+
+.score-block::before {
   content: "";
   position: absolute;
-  inset: 10px;
-  border-radius: 50%;
-  background-color: var(--paper);
+  inset: 0;
+  z-index: -1;
+  background-color: var(--highlighter);
+  transform-origin: left center;
+  animation: score-highlight 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.score-value {
-  position: relative;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-stretch: 120%;
-  font-weight: 900;
-  font-size: 2.5rem;
-  line-height: 1;
-}
-
-.score-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-/* One modifier per score band sets the colour shared by the rating chip,
-   the score ring and the score bar. */
+/* One modifier per rating sets the colour of the rating chip and of the
+   scale's active band. */
 .score-panel--excellent {
   --rating-color: var(--rating-excellent);
 }
@@ -1336,307 +1352,628 @@ textarea {
   --rating-color: var(--rating-needs-improvement);
 }
 
-.score-label {
-  margin-top: 1rem;
-  color: var(--graphite);
+.score-block-title {
+  font-stretch: 110%;
+  font-weight: 800;
   font-size: 1.25rem;
-  font-weight: 700;
-  text-align: center;
+  line-height: 1.2;
 }
 
-/* "AI review 82 · Resume checks 67" on one line when it fits. Narrower, the
-   two parts stack and the dot is hidden, so it can never dangle at the end
-   of a line. The container width is measured in em of this same text, so
-   the switch holds at any font size; browsers without container queries
-   get the stacked layout. */
-.score-breakdown {
-  width: 100%;
-  margin-top: 0.25rem;
-  font-size: 1rem;
-  container-type: inline-size;
+/* The score, then "out of 100" and the rating beside it, or under it when
+   the block is too narrow for both. */
+.score-figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 22px;
+  margin-top: 8px;
 }
 
-.score-breakdown-text {
+/* Sized from the block's width so "100" always fits; tilted like a stamp. */
+.score-value {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-stretch: 150%;
+  font-weight: 900;
+  font-size: clamp(5rem, 30cqi, 13rem);
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  transform: rotate(-2deg);
+  animation: score-stamp 420ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+}
+
+.score-figure-side {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  color: var(--graphite);
-  text-align: center;
+  align-items: flex-start;
+  gap: 8px;
 }
 
-.score-breakdown-part {
-  white-space: nowrap;
-}
-
-.score-breakdown-separator {
-  display: none;
-  margin: 0 0.5rem;
-}
-
-/* The longest line, "AI review 100 · Resume checks 100", is about 17.1em;
-   18em leaves room for font differences. flex-wrap only matters if a
-   fallback font is wider still: it wraps rather than overflowing. */
-@container (min-width: 18em) {
-  .score-breakdown-text {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .score-breakdown-separator {
-    display: inline;
-  }
+.score-out-of {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 /* The rating chip: the rating colour with paper text. */
 .score-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-  padding: 6px 14px;
+  padding: 4px 12px;
   border-radius: var(--radius-control);
   background-color: var(--rating-color);
   color: var(--paper);
   font-family: var(--font-display);
   font-stretch: 110%;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
-.score-bar {
-  width: 100%;
-  max-width: 800px;
-  height: 14px;
-  margin-top: 16px;
+/* A narrow block (a phone): "Needs Improvement" still fits on one line. */
+@container score (max-width: 17rem) {
+  .score-badge {
+    font-stretch: 100%;
+    font-size: 1.0625rem;
+  }
+}
+
+/* The rating scale: ink-ruled bands at the rating thresholds, the current
+   one filled with the rating colour, and a round marker at the score. The
+   band edges and the score come in as --band-from, --band-to and --score,
+   each a number from 0 to 100. Its width is capped for a score block that
+   spans the whole frame (nothing to fix, or a stacked frame on a tablet). */
+.score-scale {
+  max-width: 36rem;
+  margin-top: 18px;
+}
+
+.score-scale-track {
+  position: relative;
+  display: block;
+  height: 18px;
+  border: var(--border-ink);
   border-radius: var(--radius-mark);
-  background-color: var(--rule);
-  overflow: hidden;
+  background-color: var(--paper);
 }
 
-/* --value is the score as a percentage, set inline by the component. */
-.score-bar-fill {
-  width: var(--value);
-  height: 100%;
+.score-scale-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--band-from) * 1%);
+  width: calc((var(--band-to) - var(--band-from)) * 1%);
+}
+
+.score-scale-band + .score-scale-band {
+  border-left: var(--border-ink);
+}
+
+.score-scale-band--active {
   background-color: var(--rating-color);
 }
 
-.score-note {
-  margin-top: 12px;
-  color: var(--graphite);
-  font-size: 1rem;
-  text-align: center;
+/* Centred on the score, but never past either end of the track. The
+   highlighter ring cuts it out of the track's ink edges. */
+.score-scale-marker {
+  position: absolute;
+  top: 50%;
+  left: clamp(0px, calc(var(--score) * 1% - 11px), calc(100% - 22px));
+  width: 22px;
+  height: 22px;
+  margin-top: -11px;
+  border: 4px solid var(--highlighter);
+  border-radius: 50%;
+  background-color: var(--ink);
 }
 
-.summary-text {
-  font-size: 1.125rem;
-  line-height: 1.6;
-}
-
-.role-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.role-chip {
-  padding: 6px 14px;
-  border: var(--border-ink);
-  border-radius: var(--radius-control);
+/* "0 60 80 100" under the band edges; the end labels stay inside. */
+.score-scale-labels {
+  position: relative;
+  display: block;
+  height: 1.25rem;
+  margin: 6px 2px 0;
   font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.metric-grid {
-  display: grid;
-  gap: 2rem;
-}
-
-.metric-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.metric-name {
-  min-width: 0;
-}
-
-/* Keeps "88/100" on one line; the name next to it is what wraps. */
-.metric-score {
-  flex-shrink: 0;
-  margin-left: 8px;
-  white-space: nowrap;
-  font-family: var(--font-display);
+  font-size: 0.875rem;
   font-weight: 700;
+  line-height: 1.25rem;
+}
+
+.score-scale-label {
+  position: absolute;
+  top: 0;
+  left: calc(var(--at) * 1%);
+  transform: translateX(-50%);
+}
+
+.score-scale-label:first-child {
+  transform: none;
+}
+
+.score-scale-label:last-child {
+  transform: translateX(-100%);
+}
+
+/* "AI review 74" over "Resume checks 67". */
+.score-breakdown-text {
+  display: flex;
+  flex-direction: column;
+  margin-top: 14px;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
 
-.metric-bar-bg {
-  height: 8px;
+.score-note {
+  max-width: 40ch;
+  margin-top: 6px;
+  color: var(--graphite);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+/* The job match, under a 2px ink rule: the percentage, then its label
+   beside it or under it. */
+.match-mark {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: var(--border-ink);
+}
+
+.match-mark-value {
+  font-family: var(--font-display);
+  font-stretch: 140%;
+  font-weight: 900;
+  font-size: 3rem;
+  line-height: 0.9;
+  white-space: nowrap;
+}
+
+.match-mark-label {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+@container score (min-width: 22rem) {
+  .match-mark-value {
+    font-size: 4rem;
+  }
+}
+
+/* "Fix first": the to-do list on ink, numbered in highlighter. */
+.fix-first {
+  min-width: 0;
+  padding: 22px 20px 28px;
+  background-color: var(--ink);
+  color: var(--paper);
+  overflow-wrap: anywhere;
+}
+
+.fix-first-title {
+  font-stretch: 110%;
+  font-weight: 800;
+  font-size: 1.875rem;
+  line-height: 1.05;
+}
+
+.fix-first-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+/* One column width for every numeral, up to two digits at the later
+   items' size, so the titles of both lists line up. */
+.fix-first-item {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+}
+
+.fix-first-number {
+  color: var(--highlighter);
+  font-family: var(--font-display);
+  font-stretch: 150%;
+  font-weight: 900;
+  font-size: 2.25rem;
+  line-height: 0.85;
+  white-space: nowrap;
+}
+
+.fix-first-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fix-first-item-title {
+  font-family: var(--font-text);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.fix-first-source {
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.fix-first-later-title {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--graphite);
+  font-size: 1.1875rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.fix-first-list--later {
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.fix-first-list--later .fix-first-number {
+  font-size: 1.75rem;
+}
+
+@media (min-width: 600px) {
+  .score-block {
+    padding: 26px 30px 30px;
+  }
+
+  .fix-first {
+    padding: 26px 32px 32px;
+  }
+
+  .fix-first-title {
+    font-size: 2.5rem;
+  }
+
+  .fix-first-number {
+    font-size: 2.75rem;
+  }
+
+  .fix-first-item-title {
+    font-size: 1.25rem;
+  }
+
+  .fix-first-later-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* The reviewed sheet: paper in a 2px ink frame, no shadow. One column on
+   phones, tablets and paper; from a 56rem sheet, a 2px ink margin rule
+   with a 13rem marks column on its right (see the container query below). */
+.report-sheet {
+  container: sheet / inline-size;
+  margin-bottom: 40px;
+}
+
+.report-sheet-inner {
+  --marks-width: 13rem;
+  border: var(--border-ink);
+  border-radius: var(--radius-frame);
+  background-color: var(--paper);
+  /* AI text can hold long unbroken tokens (URLs, run-together words):
+     they wrap instead of widening the page. Scores and flags opt out. */
+  overflow-wrap: anywhere;
+}
+
+/* The executive summary opens the sheet, without a heading. */
+.report-lede {
+  padding: 24px 20px;
+}
+
+.report-lede p {
+  max-width: 60ch;
+  font-size: 1.3125rem;
+  line-height: 1.4;
+}
+
+.report-section {
+  padding: 24px 20px 28px;
+  border-top: 1px solid var(--rule);
+}
+
+.report-section-title {
+  font-stretch: 110%;
+  font-weight: 800;
+  font-size: 1.875rem;
+  line-height: 1.05;
+}
+
+.report-prose {
+  max-width: 68ch;
+  margin-top: 14px;
+}
+
+.report-block {
+  margin-top: 26px;
+}
+
+/* The block's heading, and its count under it (beside it, in the margin,
+   on a wide sheet). */
+.report-block-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 2px;
+}
+
+.report-block-title {
+  font-size: 1.1875rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.report-block-count {
+  color: var(--graphite);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.report-list {
+  max-width: 68ch;
+  margin-top: 10px;
+  padding-left: 1.25em;
+  list-style: square;
+}
+
+.report-list li + li {
+  margin-top: 8px;
+}
+
+/* Rows with a mark at their right end; the margin column on a wide sheet. */
+.marked-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.marked-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 16px;
+  align-items: start;
+}
+
+.marked-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.marked-row-mark {
+  display: flex;
+  justify-content: flex-end;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.check-label,
+.metric-name {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.check-detail {
+  color: var(--graphite);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+/* --value is the metric score as a percentage, set by the component. */
+.metric-bar {
+  display: block;
+  height: 10px;
   margin-top: 8px;
   border-radius: var(--radius-mark);
   background-color: var(--rule);
   overflow: hidden;
 }
 
-/* --value is the metric score as a percentage, set inline by the component. */
 .metric-bar-fill {
+  display: block;
   width: var(--value);
   height: 100%;
   background-color: var(--ink);
 }
 
-.list-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 12px;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.list-item span {
-  min-width: 0;
-  flex: 1;
-}
-
-/* Nudges an 18px icon down to sit on the first line of its text. */
-.list-item-icon {
-  flex-shrink: 0;
-  margin-top: 4px;
-}
-
-.checklist-item {
-  align-items: center;
-}
-
-.checklist-item svg {
-  flex-shrink: 0;
-}
-
-.checklist-item--failed span {
-  color: var(--rating-needs-improvement);
-}
-
-/* Space before the checklist, only when one follows the summary. */
-.ats-summary:not(:last-child) {
-  margin-bottom: 1.5rem;
-}
-
-.insight-dot {
-  flex-shrink: 0;
-  width: 6px;
-  height: 6px;
-  margin: 10px 6px;
-  background-color: var(--ink);
-}
-
-.badge {
-  display: inline-block;
-  margin: 4px;
-  padding: 3px 10px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-control);
-  background-color: var(--secondary-hover);
+/* A metric's score in the margin, "/100" set small after it. */
+.margin-mark {
   font-family: var(--font-display);
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-.badge--success {
-  border: var(--border-ink);
-  background-color: var(--highlighter);
-}
-
-.badge--warning {
-  border: 2px dashed var(--ink);
-  background-color: var(--paper);
-}
-
-/* Job Match */
-.job-match-summary {
-  margin-top: 1.25rem;
-}
-
-/* Matched and missing keywords side by side; one group alone, or a narrow
-   screen, gets the full width. Same column gap as the Resume Checks list
-   and the dashboard grid. */
-.keyword-groups {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.keyword-groups > :only-child {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 768px) {
-  .keyword-groups {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.keyword-group-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 1rem;
+.margin-mark-unit {
+  margin-left: 2px;
+  color: var(--graphite);
+  font-stretch: 100%;
+  font-size: 0.875rem;
   font-weight: 700;
 }
 
-.keyword-group-title svg {
+.pass-mark {
+  color: var(--ink);
+}
+
+/* A failed check: highlighter with an ink border, an X and the word "Fix",
+   so it never relies on colour alone. */
+.fix-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px 1px 5px;
+  border: var(--border-ink);
+  border-radius: var(--radius-control);
+  background-color: var(--highlighter);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.fix-flag svg {
   flex-shrink: 0;
 }
 
-/* Resume Checks: two columns of checks on wide screens, one on phones. */
-.resume-checks-summary {
-  margin-bottom: 1.25rem;
-  color: var(--graphite);
-}
-
-.resume-check-list {
+/* Keywords: matched ones highlighted (with the ink border yellow always
+   has on paper), ones to add marked with a "+" and a dashed underline. */
+.keyword-list,
+.role-list {
   list-style: none;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 12px;
 }
 
-@media (max-width: 768px) {
-  .resume-check-list {
-    grid-template-columns: minmax(0, 1fr);
+.keyword,
+.role-tag {
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.keyword--matched {
+  padding: 2px 8px;
+  border: var(--border-ink);
+  border-radius: var(--radius-mark);
+  background-color: var(--highlighter);
+}
+
+.keyword--missing {
+  padding: 2px 2px 1px;
+  border-bottom: 2px dashed var(--ink);
+}
+
+.keyword-insert {
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
+.role-tag {
+  padding: 3px 10px;
+  border: var(--border-ink);
+  border-radius: var(--radius-control);
+}
+
+@media (min-width: 600px) {
+  .report-lede {
+    padding: 32px 32px 28px;
+  }
+
+  .report-lede p {
+    font-size: 1.625rem;
+  }
+
+  .report-section {
+    padding: 28px 32px 32px;
+  }
+
+  .report-section-title {
+    font-size: 2.5rem;
+  }
+
+  .report-block-title {
+    font-size: 1.25rem;
   }
 }
 
-.resume-check.list-item {
-  margin-bottom: 0;
+/* The wide sheet: the examiner's 2px ink margin rule --marks-width from the
+   right edge, and the marks column beyond it. Sections reserve the column
+   with their right padding; heads and rows reach back into it, so each
+   mark sits in the column, level with its row's first line. Screens only:
+   on paper the sheet is one column. */
+@media screen {
+  @container sheet (min-width: 56rem) {
+    .report-sheet-inner {
+      --marks-gap: 38px;
+      background-image: linear-gradient(var(--ink), var(--ink));
+      background-repeat: no-repeat;
+      background-size: 2px 100%;
+      background-position: right var(--marks-width) top 0;
+    }
+
+    .report-lede,
+    .report-section {
+      padding-left: 40px;
+      padding-right: calc(var(--marks-width) + var(--marks-gap));
+    }
+
+    .report-block-head,
+    .marked-row {
+      grid-template-columns: minmax(0, 1fr) var(--marks-gap) var(--marks-width);
+      margin-right: calc(-1 * (var(--marks-width) + var(--marks-gap)));
+    }
+
+    .report-block-head {
+      align-items: baseline;
+    }
+
+    .report-block-count,
+    .marked-row-mark {
+      grid-column: 3;
+      grid-row: 1;
+      padding: 0 20px 0 24px;
+    }
+
+    .marked-row-mark {
+      justify-content: flex-start;
+    }
+
+    .margin-mark {
+      font-size: 1.75rem;
+    }
+  }
 }
 
-.resume-check-text {
+/* Sample report: the closing call to action after the sheet. */
+.sample-closing {
   display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 28px;
+  padding-top: 28px;
+  border-top: var(--border-ink);
 }
 
-.resume-check-label {
-  font-weight: 600;
-}
-
-.resume-check-detail {
-  color: var(--graphite);
-  font-size: 1rem;
+.sample-closing-text {
+  font-size: 1.1875rem;
 }
 
 /* Reduced motion: transitions become instant, a pressed button shows it
-   with its shadow only, and the highlighter stroke stops sweeping and fades
-   gently instead, while the step list shows the progress. */
+   with its shadow only, the highlighter stroke stops sweeping and fades
+   gently instead, while the step list shows the progress, and the report
+   opens with its score block already drawn. */
 @keyframes fade-pulse {
   50% { opacity: 0.4; }
 }
@@ -1663,11 +2000,17 @@ textarea {
     transform: none;
     animation: fade-pulse 2s ease-in-out infinite;
   }
+
+  .score-block::before,
+  .score-value {
+    animation: none;
+  }
 }
 
-/* Print / save as PDF: the report on white paper. Buttons are left out,
-   cards keep their contents together on one page where they fit, and
-   background colours (score ring, bars, chips) are kept. */
+/* Print / save as PDF: the report on white paper. Buttons are left out;
+   the score block keeps its highlighter and rating colours, and the ink
+   "Fix first" panel turns to paper in an ink frame to save toner. Rows and
+   subsections keep together on one page where they fit. */
 @media print {
   :root {
     --paper: var(--print-paper);
@@ -1686,6 +2029,9 @@ textarea {
     font-size: 14px;
   }
 
+  /* Browsers leave out background colours when printing unless told
+     otherwise; the score block, rating chip, scale, bars, highlights and
+     flags are drawn with them. */
   body {
     min-height: 0;
     background-color: var(--print-paper);
@@ -1718,38 +2064,88 @@ textarea {
     font-weight: 700;
   }
 
-  .dashboard-container {
+  /* The sample label, as a line of text above the report. */
+  .sample-banner {
+    position: static;
+    margin-bottom: 10pt;
+    padding: 0 0 6pt;
+    background: none;
+  }
+
+  .report-page {
     max-width: none;
     padding: 0;
   }
 
   .dashboard-header {
+    display: block;
     margin-bottom: 12pt;
   }
 
   .dashboard-title {
-    font-size: 1.6rem;
+    font-stretch: 100%;
+    font-size: 1.75rem;
   }
 
-  /* Block layout breaks across pages more predictably than grid in every
-     browser; on paper the cards stack in one column anyway. */
-  .grid {
+  .verdict {
+    margin: 0 0 12pt;
+  }
+
+  .verdict-frame {
     display: block;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    overflow: visible;
   }
 
-  .grid > * + * {
-    margin-top: 12pt;
+  .score-block {
+    border: var(--border-ink);
+    border-radius: var(--radius-frame);
+    break-inside: avoid;
   }
 
-  .card {
-    height: auto;
-    border: 1px solid var(--print-rule);
+  .score-value {
+    font-size: 6rem;
+  }
+
+  .fix-first {
+    margin-top: 10pt;
+    border: var(--border-ink);
+    border-radius: var(--radius-frame);
+    background-color: var(--print-paper);
+    color: var(--print-ink);
+  }
+
+  .fix-first-number {
+    color: var(--print-ink);
+  }
+
+  .fix-first-source {
+    color: var(--print-ink-muted);
+  }
+
+  .fix-first-later-title {
+    border-top-color: var(--print-rule);
+  }
+
+  .report-sheet {
+    margin-bottom: 0;
+  }
+
+  .report-lede,
+  .report-block,
+  .marked-row,
+  .fix-first-item {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  .card-title,
-  .keyword-group-title {
+  .score-block-title,
+  .fix-first-title,
+  .fix-first-later-title,
+  .report-section-title,
+  .report-block-head {
     break-after: avoid;
     page-break-after: avoid;
   }
