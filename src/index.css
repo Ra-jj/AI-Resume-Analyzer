@@ -1293,11 +1293,6 @@ textarea {
   .verdict-frame {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   }
-
-  /* Nothing to fix: the score takes the whole frame. */
-  .score-block:only-child {
-    grid-column: 1 / -1;
-  }
 }
 
 /* The score block. Its yellow is a highlighter layer under the text;
@@ -1422,8 +1417,8 @@ textarea {
 /* The rating scale: ink-ruled bands at the rating thresholds, the current
    one filled with the rating colour, and a round marker at the score. The
    band edges and the score come in as --band-from, --band-to and --score,
-   each a number from 0 to 100. Its width is capped for a score block that
-   spans the whole frame (nothing to fix, or a stacked frame on a tablet). */
+   each a number from 0 to 100. Its width is capped for a stacked frame on
+   a tablet, where the score block spans the whole frame. */
 .score-scale {
   max-width: 36rem;
   margin-top: 18px;
@@ -1599,7 +1594,8 @@ textarea {
   min-width: 0;
 }
 
-.fix-first-item-title {
+.fix-first-item-title,
+.fix-first-empty-title {
   font-family: var(--font-text);
   font-size: 1.125rem;
   font-weight: 600;
@@ -1630,6 +1626,34 @@ textarea {
   font-size: 1.75rem;
 }
 
+/* Nothing to fix: a highlighter tick in the numerals' column, and the
+   message where the first item's title would be. */
+.fix-first-empty {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+  margin-top: 20px;
+}
+
+/* Raised so the tick's point sits on the title's baseline. */
+.fix-first-empty-icon {
+  margin-top: -5px;
+  color: var(--highlighter);
+}
+
+.fix-first-empty-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fix-first-empty-detail {
+  font-size: 1.0625rem;
+  line-height: 1.45;
+}
+
 @media (min-width: 600px) {
   .score-block {
     padding: 26px 30px 30px;
@@ -1647,7 +1671,8 @@ textarea {
     font-size: 2.75rem;
   }
 
-  .fix-first-item-title {
+  .fix-first-item-title,
+  .fix-first-empty-title {
     font-size: 1.25rem;
   }
 
@@ -1688,6 +1713,12 @@ textarea {
 .report-section {
   padding: 24px 20px 28px;
   border-top: 1px solid var(--rule);
+}
+
+/* A sheet without an executive summary opens with a section, under the
+   sheet's own ink border: no second line. */
+.report-section:first-child {
+  border-top: 0;
 }
 
 .report-section-title {
@@ -1753,6 +1784,12 @@ textarea {
   grid-template-columns: minmax(0, 1fr) auto;
   column-gap: 16px;
   align-items: start;
+}
+
+/* A metric's score sits on its name's baseline. Check rows stay
+   top-aligned: their tick has no baseline of its own. */
+.marked-list--metrics .marked-row {
+  align-items: baseline;
 }
 
 .marked-row-body {
@@ -1917,10 +1954,19 @@ textarea {
   @container sheet (min-width: 56rem) {
     .report-sheet-inner {
       --marks-gap: 38px;
-      background-image: linear-gradient(var(--ink), var(--ink));
-      background-repeat: no-repeat;
-      background-size: 2px 100%;
-      background-position: right var(--marks-width) top 0;
+      position: relative;
+    }
+
+    /* A positioned pseudo-element is painted after the sections, so the
+       rule runs unbroken over their 1px dividers. */
+    .report-sheet-inner::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: var(--marks-width);
+      width: 2px;
+      background-color: var(--ink);
     }
 
     .report-lede,
@@ -1944,6 +1990,12 @@ textarea {
       grid-column: 3;
       grid-row: 1;
       padding: 0 20px 0 24px;
+    }
+
+    /* "4 of 6 checks passed" on one line in the column's 164px. */
+    .report-block-count {
+      font-stretch: 90%;
+      white-space: nowrap;
     }
 
     .marked-row-mark {
@@ -2117,7 +2169,8 @@ textarea {
     color: var(--print-ink);
   }
 
-  .fix-first-number {
+  .fix-first-number,
+  .fix-first-empty-icon {
     color: var(--print-ink);
   }
 

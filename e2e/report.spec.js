@@ -217,17 +217,94 @@ test("the sample's Fix first panel: three items, then three more after that, eac
   ]);
 });
 
-test("a report with nothing to fix shows the score block alone, across the frame", async ({ page }) => {
+test("a report with nothing to fix says so in the Fix first panel, beside the score block", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   // resume.pdf passes every check; no improvements and no job description.
   await openReport(page, makeAnalysis({ mainImprovements: [] }));
 
-  await expect(page.locator(".fix-first")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Fix first" })).toHaveCount(0);
-  const frameBox = await box(page.locator(".verdict-frame"));
+  const panel = page.locator(".fix-first");
+  await expect(panel).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Fix first" })).toHaveCount(1);
+  await expect(panel.getByRole("heading", { level: 2 })).toHaveText("Fix first");
+  await expect(panel.locator("ol, li, .fix-first-item")).toHaveCount(0);
+  await expect(panel.locator(".fix-first-empty-title")).toHaveText("Nothing to fix first.");
+  await expect(panel.locator(".fix-first-empty-detail")).toHaveText(
+    "Every automated check passed and the AI review suggested no main improvements.",
+  );
+  // A highlighter tick, hidden from screen readers.
+  const tick = panel.locator(".fix-first-empty svg");
+  await expect(tick).toHaveCount(1);
+  await expect(tick).toHaveAttribute("aria-hidden", "true");
+  expect(await tick.evaluate((icon) => getComputedStyle(icon).color)).toBe(HIGHLIGHTER);
+  // No live region and nothing focusable in the verdict.
+  expect(
+    await page
+      .locator(".verdict")
+      .evaluate(
+        (element) =>
+          element.querySelectorAll(
+            'a[href], button, input, select, textarea, [tabindex], [aria-live], [role="status"], [role="alert"]',
+          ).length,
+      ),
+  ).toBe(0);
+
+  // The frame keeps its two columns, 5 to 7, the panels level and as tall
+  // as each other.
   const scoreBox = await box(page.locator(".score-block"));
-  // The frame's 2px border on each side.
-  expect(scoreBox.width).toBeCloseTo(frameBox.width - 4, 0);
+  const panelBox = await box(panel);
+  expect(panelBox.x).toBeGreaterThanOrEqual(scoreBox.x + scoreBox.width - 1);
+  expect(Math.abs(panelBox.y - scoreBox.y)).toBeLessThan(1);
+  expect(Math.abs(panelBox.height - scoreBox.height)).toBeLessThan(1);
+  expect(scoreBox.width / panelBox.width).toBeCloseTo(5 / 7, 2);
+
+  // Below a 60rem frame it stacks under the score block, as usual.
+  for (const width of [768, 320]) {
+    await page.setViewportSize({ width, height: 720 });
+    const stackedScoreBox = await box(page.locator(".score-block"));
+    const stackedPanelBox = await box(panel);
+    expect(Math.abs(stackedPanelBox.x - stackedScoreBox.x)).toBeLessThan(1);
+    expect(stackedPanelBox.y).toBeGreaterThanOrEqual(
+      stackedScoreBox.y + stackedScoreBox.height - 1,
+    );
+    await expectNoHorizontalOverflow(page, width);
+  }
+
+  // On paper: an ink frame on white, ink text and an ink tick.
+  await page.emulateMedia({ media: "print" });
+  await expect(panel.locator(".fix-first-empty-title")).toBeVisible();
+  await expect(tick).toBeVisible();
+  expect(
+    await panel.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        background: style.backgroundColor,
+        border: `${style.borderTopWidth} ${style.borderTopStyle} ${style.borderTopColor}`,
+        title: getComputedStyle(element.querySelector(".fix-first-empty-title")).color,
+        detail: getComputedStyle(element.querySelector(".fix-first-empty-detail")).color,
+        tick: getComputedStyle(element.querySelector(".fix-first-empty svg")).color,
+      };
+    }),
+  ).toEqual({
+    background: "rgb(255, 255, 255)",
+    border: `2px solid ${INK}`,
+    title: INK,
+    detail: INK,
+    tick: INK,
+  });
+});
+
+test("a sheet without an executive summary has no second line under its top border", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await openReport(page, makeAnalysis({ executiveSummary: "" }));
+
+  await expect(page.locator(".report-lede")).toHaveCount(0);
+  // Writing quality first; then Structure and ATS, Keywords and roles.
+  const sectionBorders = await page
+    .locator(".report-sheet-inner > .report-section")
+    .evaluateAll((sections) =>
+      sections.map((section) => getComputedStyle(section).borderTopWidth),
+    );
+  expect(sectionBorders).toEqual(["0px", "1px", "1px"]);
 });
 
 test.describe("the rating scale", () => {
@@ -376,32 +453,58 @@ for (const { width, isWideSheet, isWideVerdict } of [
 
       const layout = await page.locator(".report-sheet-inner").evaluate((sheet) => {
         const rectOf = (element) => element.getBoundingClientRect();
+        // Where an element's first line sits on its baseline: the bottom of
+        // an empty inline-block put at its start, then removed.
+        const baselineOf = (element) => {
+          const probe = document.createElement("span");
+          probe.style.display = "inline-block";
+          element.prepend(probe);
+          const baseline = rectOf(probe).bottom;
+          probe.remove();
+          return baseline;
+        };
         const sheetRect = rectOf(sheet);
         const style = getComputedStyle(sheet);
+        const rule = getComputedStyle(sheet, "::after");
         const contentRight = sheetRect.right - parseFloat(style.borderRightWidth);
         const rowMarks = [...sheet.querySelectorAll(".marked-row")].map((row) => {
           const rowRect = rectOf(row);
-          const markRect = rectOf(row.querySelector(".marked-row-mark > *"));
-          const firstLineRect = rectOf(row.querySelector(".marked-row-body > *"));
+          const mark = row.querySelector(".marked-row-mark > *");
+          const firstLine = row.querySelector(".marked-row-body > *");
+          const markRect = rectOf(mark);
           return {
+            isScore: mark.matches(".margin-mark"),
             left: markRect.left,
             right: markRect.right,
             rowRight: rowRect.right,
-            topGap: Math.abs(markRect.top - firstLineRect.top),
+            topGap: Math.abs(markRect.top - rectOf(firstLine).top),
+            baselineGap: Math.abs(baselineOf(mark) - baselineOf(firstLine)),
           };
         });
         const counts = [...sheet.querySelectorAll(".report-block-count")].map((count) => {
           const heading = count.parentElement.querySelector("h3");
+          const text = document.createRange();
+          text.selectNodeContents(count);
           return {
             left: rectOf(count).left,
             right: rectOf(count).right,
+            contentBoxRight:
+              rectOf(count).right - parseFloat(getComputedStyle(count).paddingRight),
+            textRight: text.getBoundingClientRect().right,
+            lines: new Set([...text.getClientRects()].map((line) => Math.round(line.top))).size,
             top: rectOf(count).top,
             headingTop: rectOf(heading).top,
             headingBottom: rectOf(heading).bottom,
           };
         });
         return {
-          marginRule: style.backgroundImage,
+          marginRule: {
+            content: rule.content,
+            position: rule.position,
+            right: rule.right,
+            width: rule.width,
+            colour: rule.backgroundColor,
+          },
           marksColumnLeft: contentRight - 13 * 16,
           contentRight,
           rowMarks,
@@ -411,21 +514,64 @@ for (const { width, isWideSheet, isWideVerdict } of [
 
       // 4 metric scores, 6 resume checks, 4 ATS items; 2 counts.
       expect(layout.rowMarks).toHaveLength(14);
+      expect(layout.rowMarks.filter((mark) => mark.isScore)).toHaveLength(4);
       expect(layout.counts).toHaveLength(2);
+      for (const mark of layout.rowMarks) {
+        // Level with the row's first line: a score on its baseline, a tick
+        // or flag at its top.
+        expect(mark.topGap).toBeLessThan(10);
+        if (mark.isScore) {
+          expect(mark.baselineGap, "a score on its row's baseline").toBeLessThan(1);
+        } else {
+          expect(mark.topGap, "a tick or flag level with its row's top").toBeLessThan(1);
+        }
+      }
       if (isWideSheet) {
-        expect(layout.marginRule).toMatch(/^linear-gradient\(/);
+        // A 2px ink rule 13rem from the sheet's inner right edge.
+        expect(layout.marginRule).toEqual({
+          content: '""',
+          position: "absolute",
+          right: "208px",
+          width: "2px",
+          colour: INK,
+        });
         for (const mark of [...layout.rowMarks, ...layout.counts]) {
           expect(mark.left).toBeGreaterThanOrEqual(layout.marksColumnLeft);
           expect(mark.right).toBeLessThanOrEqual(layout.contentRight);
         }
-        // Level with the first line of the row, or with the heading.
-        for (const mark of layout.rowMarks) expect(mark.topGap).toBeLessThan(10);
-        for (const count of layout.counts) expect(count.top).toBeLessThan(count.headingBottom);
+        // Level with the heading, on one line inside the column's padding.
+        for (const count of layout.counts) {
+          expect(count.top).toBeLessThan(count.headingBottom);
+          expect(count.lines, "a count on one line").toBe(1);
+          expect(count.textRight, "a count inside its column").toBeLessThanOrEqual(
+            count.contentBoxRight,
+          );
+        }
+
+        // The rule runs over the sections' 1px dividers, not under them.
+        const ruleOnTop = await page.locator(".report-sheet-inner").evaluate((sheet) => {
+          const sheetRect = sheet.getBoundingClientRect();
+          const innerRight = sheetRect.right - parseFloat(getComputedStyle(sheet).borderRightWidth);
+          const results = [...sheet.querySelectorAll(".report-section")].map((section) => {
+            // Its top in the viewport, clear of the sample banner.
+            window.scrollTo(0, window.scrollY + section.getBoundingClientRect().top - 200);
+            const y = section.getBoundingClientRect().top + 0.5;
+            // The middle of the 2px rule.
+            return document.elementFromPoint(innerRight - 13 * 16 - 1, y) === sheet;
+          });
+          window.scrollTo(0, 0);
+          return results;
+        });
+        expect(ruleOnTop, "the margin rule over each section's divider").toEqual([
+          true,
+          true,
+          true,
+          true,
+        ]);
       } else {
-        expect(layout.marginRule).toBe("none");
+        expect(layout.marginRule.content).toBe("none");
         for (const mark of layout.rowMarks) {
           expect(Math.abs(mark.right - mark.rowRight)).toBeLessThan(1);
-          expect(mark.topGap).toBeLessThan(10);
         }
         for (const count of layout.counts) {
           expect(count.top).toBeGreaterThanOrEqual(count.headingBottom - 1);
@@ -629,6 +775,20 @@ for (const { title, analysis, resumeHtml, score, rating } of [
       for (const { selector, inside, lines } of fits) {
         expect(inside, `${selector} inside the score block at ${width}px`).toBe(true);
         expect(lines, `${selector} on one line at ${width}px`).toBe(1);
+      }
+
+      // Nothing in the verdict is wider than its panel: the frame's
+      // overflow: hidden would cut it off without widening the page.
+      const panels = await page.locator(".verdict-frame").evaluate((frame) =>
+        [".score-block", ".fix-first"].map((selector) => {
+          const panel = frame.querySelector(selector);
+          return { selector, scrollWidth: panel.scrollWidth, clientWidth: panel.clientWidth };
+        }),
+      );
+      for (const { selector, scrollWidth, clientWidth } of panels) {
+        expect(scrollWidth, `${selector} content fits at ${width}px`).toBeLessThanOrEqual(
+          clientWidth,
+        );
       }
 
       // Every row mark (scores, ticks, flags) on one line inside the sheet.

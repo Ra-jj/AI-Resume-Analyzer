@@ -116,7 +116,7 @@ function WritingQualitySection({ report }) {
   return (
     <ReportSection title="Writing quality">
       {hasItems(report.performanceMetrics) && (
-        <ul className="marked-list">
+        <ul className="marked-list marked-list--metrics">
           {report.performanceMetrics.map((metric, index) => (
             <MarkedRow
               key={index}

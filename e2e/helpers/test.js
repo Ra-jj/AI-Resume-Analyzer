@@ -132,7 +132,8 @@ export function reportPrintStyles(page) {
     return {
       body: style("body").backgroundColor,
       sheet: style(".report-sheet-inner").backgroundColor,
-      sheetMarginRule: style(".report-sheet-inner").backgroundImage,
+      // The margin rule is the sheet's ::after; "none" when it isn't drawn.
+      sheetMarginRule: style(".report-sheet-inner", "::after").content,
       heading: style(".dashboard-title").color,
       mutedText: style(".score-note").color,
       scoreBlock: {

@@ -184,6 +184,11 @@ test("the print stylesheet shows only the report, ink on white, with the score b
   await expect(page.locator(".truncation-notice")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Job Match" })).toBeVisible();
   await expect(page.locator(".fix-first")).toBeVisible();
+  // The whole sheet prints: the summary and every section.
+  await expect(page.locator(".report-lede")).toBeVisible();
+  const sections = page.locator(".report-section");
+  await expect(sections).toHaveCount(4);
+  for (const section of await sections.all()) await expect(section).toBeVisible();
 
   expect(await reportPrintStyles(page)).toEqual({
     body: PRINT_PAPER,
