@@ -28,3 +28,6 @@ npm-debug.log*
 
 # Design reference images (local only)
 design-refs/
+
+# Local notes for AI agents (kept off GitHub)
+project-context.md
