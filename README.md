@@ -2,31 +2,48 @@
 
 🔗 [Live Demo](https://ai-resume-analyzer-rajcodes.vercel.app/)
 
-A client-side React app that analyzes a PDF resume with AI and turns the result into a scored report: overall score, strengths, improvements, ATS checklist, performance metrics, keyword and role suggestions. There is no backend server; the PDF is read in the browser and the AI call goes through [Puter.js](https://puter.com).
+Upload a PDF resume and get it back reviewed: a score out of 100, a ranked list of what to fix first, writing scores, automated resume and ATS checks, and an optional match against a job description. It is a client-side React app with no backend; the PDF is read in your browser and the AI review goes through [Puter.js](https://puter.com).
 
-![Analysis report](docs/screenshots/report.png)
+![Homepage with the upload sheet](docs/screenshots/upload.png)
 
-| Upload | Mobile |
+The homepage also shows a live sample report, built from a fictional resume:
+
+![Sample report section on the homepage](docs/screenshots/home-sample.png)
+
+| Full report (sample) | On a phone |
 |---|---|
-| ![Upload screen](docs/screenshots/upload.png) | ![Report on a phone](docs/screenshots/mobile.png) |
+| ![Full analysis report](docs/screenshots/report.png) | ![Report on a phone](docs/screenshots/mobile.png) |
 
 ## ✨ Features
 
-- **Drag-and-drop or pick a file**: drop a PDF onto the upload area or choose one with the button (keyboard accessible).
-- **In-browser PDF parsing**: text is extracted with Mozilla's `pdfjs-dist` in a Web Worker, so the UI stays responsive. The PDF library is loaded on demand, keeping the first page load small.
-- **Structured AI analysis**: the AI is asked for strict JSON, and every response is validated and normalized before rendering (scores clamped to 0–100, malformed fields dropped), so a bad response shows an error instead of a broken dashboard.
-- **Job description match (optional)**: paste a job posting to get a match score, a short fit summary, and the keywords the resume already covers or is missing.
-- **Blended, more stable score**: the overall score combines the AI review (70%) with six automated checks computed in code (30%): length, measurable results, email, phone, LinkedIn/portfolio link and standard sections.
-- **Pinned AI model**: every analysis uses the same model (`claude-sonnet-5-5` via Puter.js), and an unreadable AI reply is retried once automatically.
-- **Analytics dashboard**: overall score, job match, executive summary, recommended roles, performance metrics, resume checks, strengths, improvements, ATS checklist, insights and keywords.
-- **Share the result**: copy a plain-text summary of the report, or print it / save it as a PDF with a clean, light print layout.
-- **Accessible**: step-by-step progress announced to screen readers, focus moved to the report when it opens, visible keyboard focus everywhere, and reduced motion respected.
-- **Clear error handling**: separate messages for wrong file type, oversized files, too many pages, password-protected PDFs, image-only PDFs, PDFs that take too long to read, a too-short job description, AI timeouts, Puter sign-in or usage-limit problems and unreadable AI responses, plus error boundaries so a rendering failure never blanks the page.
+**The report**
+- **Verdict first**: a large stamped score with its rating (Excellent, Good or Needs Improvement), a scale showing where 60 and 80 fall, the AI and check scores behind it, and the job match percentage.
+- **Fix first**: a ranked to-do list built from failed checks, the AI's main improvements and missing job keywords. When there is nothing urgent, the panel says so instead of disappearing.
+- **Reviewed sheet**: the AI's summary, then Job match, Writing quality, Structure and ATS, and Keywords and roles, with a marks column like an examiner's margin (✓ for passed rows, a yellow **Fix** flag for failed ones).
+- **Blended, more stable score**: 70% AI review plus 30% from six checks computed in code: length, measurable results, email, phone, LinkedIn/portfolio link and standard sections.
+- **Job description match (optional)**: paste a job posting to get a match score, a short fit summary, and the keywords the resume already has or is missing.
+- **Share it**: copy a plain-text summary, or print it / save it as a PDF with a clean, light print layout.
+
+**The homepage**
+- **Upload sheet**: drag a PDF onto it or choose a file (keyboard accessible), with an optional job description.
+- **How it works**: three steps, including what kind of PDF works.
+- **Live sample report**: the top of a real report for a fictional resume, clearly labelled, plus a full sample report you can open without uploading anything. The sample never calls the AI.
+- **What happens to your resume**: a plain explanation of what is read locally, what is sent to the AI, and what is (not) kept.
+
+**Under the hood**
+- **In-browser PDF parsing** with Mozilla's `pdfjs-dist` in a Web Worker, loaded on demand so the first page load stays small.
+- **Structured AI analysis**: strict JSON from a pinned model (`claude-sonnet-5-5` via Puter.js); every reply is validated and normalized, and an unreadable reply is retried once.
+- **Accessible**: step-by-step progress announced to screen readers, focus moved to the report when it opens, a visible keyboard focus ring everywhere, reduced motion respected, and a Windows High Contrast-friendly drag state.
+- **Clear error handling**: separate messages for wrong file type, oversized files, too many pages, password-protected PDFs, image-only PDFs, slow or failed PDF loading, a too-short job description, AI timeouts, Puter sign-in or usage-limit problems and unreadable AI replies, plus error boundaries so a rendering failure never blanks the page.
+
+## 🎨 Design
+
+A "reviewed document" look: cool paper `#F5F6F8`, blue-black ink `#141625` and one fluorescent highlighter accent `#FFE21A`, with hard ink borders and offset shadows. Type is [Anybody](https://fonts.google.com/specimen/Anybody) for headings, marks and the big numbers, and [Newsreader](https://fonts.google.com/specimen/Newsreader) for the AI's text. Both fonts are self-hosted from `public/fonts/` under the SIL Open Font License, so the page makes no request to Google. One signature motion: when a report opens, a highlighter swipes the score block and the number stamps in (off for reduced motion).
 
 ## 🔒 Privacy
 
 - The PDF file itself never leaves your browser; only its **extracted text** is sent for analysis.
-- That text — including any name, email or phone number in your resume — **is sent to an AI model via Puter.js**, a third-party service, together with the job description if you add one. Remove details you don't want to share before uploading.
+- That text, including any name, email or phone number in your resume, **is sent to an AI model via Puter.js**, a third-party service, together with the job description if you add one. Remove details you don't want to share before uploading.
 - This app keeps no database, no analytics and no saved reports. (Puter.js may keep its own sign-in data in your browser.)
 - The first analysis may open a Puter sign-in window. See [Puter's documentation](https://docs.puter.com) for how its AI usage works.
 
@@ -51,10 +68,12 @@ A client-side React app that analyzes a PDF resume with AI and turns the result 
 ## 🛠 Tech Stack
 
 - **Framework**: React 19 + Vite
-- **Styling**: Plain CSS with custom properties
+- **Styling**: Plain CSS with custom properties and container queries
+- **Fonts**: Anybody + Newsreader (self-hosted, OFL)
 - **PDF parsing**: `pdfjs-dist`
 - **AI**: Puter.js
 - **Icons**: `lucide-react`
+- **Testing**: Vitest (unit) and Playwright (end-to-end)
 
 ## 🚀 Getting Started
 
@@ -81,13 +100,12 @@ Then open http://localhost:5173.
 
 ## 🧪 Testing
 
-- **Unit tests**: about 665 Vitest tests next to the modules they cover (`src/**/*.test.js`), for response normalization, AI error mapping, resume checks, score blending, prompt building and the Puter call (with a stubbed `puter`).
-- **End-to-end tests**: 89 Playwright tests drive a fresh production build in Chromium with real PDFs and a stubbed AI: uploads, drag-and-drop, the job description flow, score ratings, almost every error message (all but unreadable-file and unexpected-crash), keyboard access, focus and screen-reader announcements, reduced motion, copy and print, security headers and phone-width layout. No test ever contacts Puter or any other outside site.
+- **Unit tests**: 699 Vitest tests next to the modules they cover (`src/**/*.test.js`): response normalization, AI error mapping, resume checks, score blending and ratings, the Fix first ranking, the fictional sample report, prompt building and the Puter call (with a stubbed `puter`).
+- **End-to-end tests**: 174 Playwright tests drive a fresh production build in Chromium with real PDFs and a stubbed AI: the homepage and its sample report, uploads and drag-and-drop, the job description flow, the report layout and score ratings, almost every error message, keyboard order and focus, screen-reader announcements, reduced motion, copy and print, fonts, security headers and layouts from 320px phones to wide desktops. No test ever contacts Puter or any other outside site.
 - **CI**: every push to `main` and every pull request runs install, lint, unit tests, build and end-to-end tests in GitHub Actions.
 
 ## 🗺️ Known follow-ups
 
-- Add a `<main>` landmark and tidy the report's heading levels (h1 → h3 jump).
 - Move focus to the error message after a failed analysis.
 - Join pdf.js text fragments more carefully so long links aren't split in the Resume Checks details.
 
@@ -97,13 +115,13 @@ Then open http://localhost:5173.
 2. **Parse**: pdf.js extracts the text from each page in a Web Worker.
 3. **Analyze**: the text (and the job description, if given) is sent to the pinned AI model with a prompt that requires a fixed JSON structure, while automated checks run on the full text in the browser.
 4. **Validate**: the response is parsed and normalized into a guaranteed shape.
-5. **Report**: the AI score and check score are blended, and the dashboard renders the result.
+5. **Report**: the AI score and check score are blended, the Fix first list is ranked, and the report renders.
 
 ## 📁 Project Structure
 
 ```
 src/
-├── App.jsx                     # Switches between the upload and report screens
+├── App.jsx                     # Switches between home, report and sample report
 ├── main.jsx                    # Entry point, top-level error boundary, stray-drop guard
 ├── index.css                   # All styles and design tokens
 ├── hooks/
@@ -112,19 +130,25 @@ src/
 │   ├── pdf.js                  # Lazy-loaded pdf.js text extraction
 │   └── analyze.js              # Puter.js AI call and response handling
 ├── components/
-│   ├── UploadView.jsx          # Upload screen with drag-and-drop
+│   ├── UploadView.jsx          # Homepage with the upload sheet
 │   ├── JobDescriptionInput.jsx # Optional job description field
 │   ├── AnalysisProgress.jsx    # Step-by-step loading indicator
-│   ├── DashboardView.jsx       # Analysis report
-│   └── ErrorBoundary.jsx       # Fallback UI for rendering failures
+│   ├── DashboardView.jsx       # Report screen (real or sample)
+│   ├── ErrorBoundary.jsx       # Fallback UI for rendering failures
+│   ├── home/                   # Homepage sections (report preview column, how it works, sample, privacy, footer)
+│   └── report/                 # Report parts (header, verdict, score, Fix first, sheet)
 └── lib/                        # Pure helpers (no React, no network)
     ├── analysis.js             # JSON extraction and response normalization
     ├── resumeChecks.js         # Automated resume checks computed in code
-    ├── report.js               # Blends AI and check scores; score ratings
+    ├── report.js               # Blends AI and check scores; rating thresholds
+    ├── fixFirst.js             # Ranked "Fix first" to-do list
+    ├── sampleReport.js         # Fictional sample report, built through the real pipeline
     ├── reportText.js           # Plain-text report summary for copying
     ├── aiErrors.js             # Maps Puter failures to error codes
     ├── prompt.js               # Builds the AI messages and strips injected delimiter tags
     ├── errors.js               # Error codes and user-facing messages
     ├── files.js                # File type/size checks
     └── limits.js               # Limits, timeouts and text helpers
+public/
+└── fonts/                      # Self-hosted Anybody + Newsreader (woff2 + OFL licences)
 ```

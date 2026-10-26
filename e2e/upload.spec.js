@@ -84,7 +84,7 @@ test("analyzes a resume end to end, then returns to a clean upload view", async 
   const checkCount = await checkItems.count();
   expect(checkCount).toBeGreaterThan(0);
   await expect(checksCard.locator(".resume-checks-summary")).toHaveText(
-    new RegExp(`^\\d+ of ${checkCount} checks passed$`),
+    new RegExp(`^\\d+ of ${checkCount} passed$`),
   );
 
   // No job description was given, so there is no Job match section and no
@@ -246,7 +246,7 @@ test("runs the resume checks on the full text of a long resume, not the AI's cop
   const checksCard = page.locator(".report-block").filter({
     has: page.getByRole("heading", { name: "Resume Checks" }),
   });
-  await expect(checksCard.locator(".resume-checks-summary")).toHaveText("5 of 6 checks passed");
+  await expect(checksCard.locator(".resume-checks-summary")).toHaveText("5 of 6 passed");
   // Each check is labelled for screen readers by its result.
   const checkItems = checksCard.getByRole("listitem");
   await expect(checkItems.filter({ hasText: /^Passed: / })).toHaveCount(5);

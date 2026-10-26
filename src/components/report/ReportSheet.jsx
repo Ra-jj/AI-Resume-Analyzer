@@ -21,7 +21,7 @@ function ReportSection({ title, children }) {
 }
 
 /**
- * A subsection under an h3. `count` (e.g. "5 of 6 checks passed") is a
+ * A subsection under an h3. `count` (e.g. "5 of 6 passed") is a
  * mark: in the margin beside the heading on a wide sheet, under it on a
  * narrow one.
  */
@@ -160,7 +160,7 @@ function StructureSection({ report }) {
       {hasItems(checks) && (
         <ReportBlock
           title="Resume checks"
-          count={`${countPassed(checks)} of ${checks.length} checks passed`}
+          count={`${countPassed(checks)} of ${checks.length} passed`}
           countClassName="resume-checks-summary"
         >
           <ul className="marked-list">

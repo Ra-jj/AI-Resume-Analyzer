@@ -540,11 +540,14 @@ for (const { width, isWideSheet, isWideVerdict } of [
           expect(mark.right).toBeLessThanOrEqual(layout.contentRight);
         }
         // Level with the heading, on one line inside the column's padding.
+        // Text renders about 10px wider on Linux than on macOS, so a count
+        // must leave room to spare here, not just fit.
+        const COUNT_SPARE_PX = 8;
         for (const count of layout.counts) {
           expect(count.top).toBeLessThan(count.headingBottom);
           expect(count.lines, "a count on one line").toBe(1);
-          expect(count.textRight, "a count inside its column").toBeLessThanOrEqual(
-            count.contentBoxRight,
+          expect(count.textRight, "a count inside its column, with room to spare").toBeLessThanOrEqual(
+            count.contentBoxRight - COUNT_SPARE_PX,
           );
         }
 
@@ -735,7 +738,7 @@ for (const { title, analysis, resumeHtml, score, rating } of [
     title: "Needs Improvement and long check details",
     analysis: longAnalysis(0),
     resumeHtml: LONG_CHECK_DETAILS,
-    // 0.7 × 0 + 0.3 × 33 (2 of 6 checks passed)
+    // 0.7 × 0 + 0.3 × 33 (2 of 6 resume checks passed)
     score: "10",
     rating: "Needs Improvement",
   },

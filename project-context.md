@@ -31,7 +31,8 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - `src/services/` — side effects: `pdf.js` (lazy pdf.js extraction), `analyze.js` (the only file that touches `puter`)
 - `src/lib/` — pure helpers only (no React, no puter, no pdf.js): normalization, errors, AI-failure mapping, file checks, limits, resume checks, score blending + rating thresholds (`report.js`), prompt building (`prompt.js`), the ranked to-do list (`fixFirst.js`), and the fictional sample report built through the real pipeline (`sampleReport.js`; must never import services/)
 - Tests are colocated as `*.test.js` next to the module they cover
-- `src/components/report/` — ReportHeader, VerdictBlock (score block + Fix first; `headingLevel` prop, no focusable elements — reused on the homepage in round 4), ScoreBlock, FixFirstList, ReportSheet, MarkedRow; DashboardView composes them
+- `src/components/report/` — ReportHeader, VerdictBlock (score block + Fix first; `headingLevel` prop, no focusable elements — reused on the homepage sample section), ScoreBlock, FixFirstList, ReportSheet, MarkedRow; DashboardView composes them
+- `src/components/home/` — ReportMarks ("In your report" column), HowItWorks, SampleSection (static, memo'd live VerdictBlock preview of the sample with its own ErrorBoundary; hidden while loading), PrivacySection, SiteFooter
 - `src/components/` — UploadView, JobDescriptionInput, AnalysisProgress (+ `AnalysisStatus`, the single always-present `role="status"` line rendered by UploadView), DashboardView, ErrorBoundary
 - e2e helpers: use `loadingHeading(page)` / `analysisStatus(page)` (e2e/helpers/test.js) rather than `getByRole("status")` to detect loading
 - `vercel.json` — security headers (no script/connect CSP, no COOP/COEP: they would break Puter.js). `vite.config.js` reads the same headers into `preview.headers`, so e2e runs under them.
@@ -46,6 +47,7 @@ A client-side React app: the user uploads a PDF resume, the browser extracts its
 - Focus: the report `<h1>` gets programmatic focus on open; App owns `initialFocus` for the upload view — "Analyze another resume" and "Analyze your own resume" → file input, "Back to home" (from the sample) → "See a full sample report" button; nothing takes focus on first load.
 - Sample mode (`isSample` on DashboardView): banner is plain text, never a live region; it must never trigger pdf.js or Puter.
 - User-visible copy: no em/en dashes in check labels/details (unit-tested).
+- Text that must fit a fixed box needs ≥10% / ≥8px spare: CI runs on Linux, where the same fonts render a few % wider than on macOS (counts read "N of 6 passed").
 - Respect `prefers-reduced-motion`; print layout uses the `--print-*` tokens in index.css.
 - Score ratings come only from `getScoreRating()` in lib/report.js.
 

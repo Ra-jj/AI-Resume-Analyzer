@@ -310,7 +310,9 @@ textarea {
   }
 
   .home-title {
-    font-size: clamp(3.25rem, 1.5rem + 5vw, 6rem);
+    /* Capped at 5.5rem so "Your resume," keeps ~10% spare in its column
+       even where a renderer draws text a little wider (e.g. Linux). */
+    font-size: clamp(3.25rem, 1.5rem + 5vw, 5.5rem);
   }
 
   .upload-subtitle {
@@ -866,9 +868,55 @@ textarea {
   color: var(--ink-muted);
 }
 
-/* "See a full sample report" (a preview of the sample joins it later). */
+/* "Sample report": the heading with its tag, an intro line, the sample's
+   verdict as the report draws it, then "See a full sample report". */
 .sample-section {
   padding-top: 56px;
+}
+
+.sample-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+/* A label, not a heading: yellow, so in an ink frame. */
+.sample-tag {
+  padding: 2px 10px;
+  border: var(--border-ink);
+  border-radius: var(--radius-control);
+  background-color: var(--highlighter);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.sample-intro {
+  max-width: 56ch;
+  margin-top: 14px;
+  color: var(--graphite);
+  font-size: 1.1875rem;
+  line-height: 1.45;
+}
+
+.sample-preview {
+  margin-top: 28px;
+}
+
+/* The preview shows the verdict's final state: the highlighter sweep and
+   the score's stamp belong to opening a report. */
+.sample-preview .score-block::before,
+.sample-preview .score-value {
+  animation: none;
+}
+
+/* When the preview failed to render, the button follows the heading. */
+.sample-section-head + .sample-open-btn {
+  margin-top: 24px;
 }
 
 /* "What happens to your resume" */
@@ -941,6 +989,15 @@ textarea {
 
   .sample-section {
     padding-top: 72px;
+  }
+
+  .sample-intro {
+    margin-top: 16px;
+    font-size: 1.25rem;
+  }
+
+  .sample-preview {
+    margin-top: 36px;
   }
 
   .privacy-section {
@@ -1406,8 +1463,9 @@ textarea {
   white-space: nowrap;
 }
 
-/* A narrow block (a phone): "Needs Improvement" still fits on one line. */
-@container score (max-width: 17rem) {
+/* A narrow block (a phone): "Needs Improvement" still fits on one line,
+   with room to spare for wider text rendering. */
+@container score (max-width: 20rem) {
   .score-badge {
     font-stretch: 100%;
     font-size: 1.0625rem;
@@ -1990,12 +2048,6 @@ textarea {
       grid-column: 3;
       grid-row: 1;
       padding: 0 20px 0 24px;
-    }
-
-    /* "4 of 6 checks passed" on one line in the column's 164px. */
-    .report-block-count {
-      font-stretch: 90%;
-      white-space: nowrap;
     }
 
     .marked-row-mark {

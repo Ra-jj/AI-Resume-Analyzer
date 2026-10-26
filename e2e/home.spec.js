@@ -160,12 +160,13 @@ test.describe("home page", () => {
     await expect(page.getByRole("main")).toHaveCount(1);
     await expect(page.getByRole("banner")).toHaveText("AI Resume Analyzer");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your resume, reviewed.");
-    // h1, the sheet's h2, then each section's h2 and the steps' h3s: no level
-    // is skipped.
+    // h1, the sheet's h2, then each section's h2: the steps' h3s, and the
+    // sample preview's "Overall score" and "Fix first" (h3) with "After
+    // that" (h4). No level is skipped.
     const headingLevels = await page
       .locator("h1, h2, h3, h4, h5, h6")
       .evaluateAll((headings) => headings.map((heading) => Number(heading.tagName[1])));
-    expect(headingLevels).toEqual([1, 2, 2, 3, 3, 3, 2]);
+    expect(headingLevels).toEqual([1, 2, 2, 3, 3, 3, 2, 3, 3, 4, 2]);
 
     await expect(page.locator(".upload-subtitle")).toHaveText(
       "Upload a PDF of your resume and get a score out of 100 and a list of what to fix first.",

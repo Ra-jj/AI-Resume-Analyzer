@@ -8,6 +8,7 @@ import JobDescriptionInput from "./JobDescriptionInput.jsx";
 import HowItWorks from "./home/HowItWorks.jsx";
 import PrivacySection from "./home/PrivacySection.jsx";
 import ReportMarks from "./home/ReportMarks.jsx";
+import SampleSection from "./home/SampleSection.jsx";
 import SiteFooter from "./home/SiteFooter.jsx";
 
 // onUploadIntent runs when the user looks about to choose a file (a file is
@@ -208,19 +209,11 @@ function UploadView({
 
         {/* After the upload controls, so Tab reaches the job description
             and the file input first. Hidden while analyzing, like the
-            controls. It is not an upload intent: opening the sample never
-            loads pdf.js. */}
+            controls, so the screen can't switch to the sample mid-analysis.
+            It is not an upload intent: the preview and the sample never
+            load pdf.js. */}
         {!loading && (
-          <div className="page-width sample-section">
-            <button
-              ref={sampleButtonRef}
-              type="button"
-              className="report-action-btn sample-open-btn"
-              onClick={onOpenSample}
-            >
-              See a full sample report
-            </button>
-          </div>
+          <SampleSection buttonRef={sampleButtonRef} onOpenSample={onOpenSample} />
         )}
 
         <PrivacySection />
